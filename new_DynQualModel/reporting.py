@@ -12,6 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import pcraster as pcr
+import virtualOS as vos
 
 from ncConverter import *
 
@@ -327,18 +328,21 @@ class Reporting(object):
         # ice thickness (K)
         self.iceThickness = self._model.routing.iceThickness
         
-        # Salinity pollution [input is g/day]
-        self.salinity = self._model.routing.salinity #in grams
-        #self.salinity = self._model.routing.salinity/self._model.routing.channelStorage #in mg/L
+        # Aspects related to salinity pollution
+        self.TDSload = self._model.routing.TDSload #in grams
+        self.routedTDS = self._model.routing.routedTDS #in grams
+        self.salinity = vos.getValDivZero(self._model.routing.routedTDS, self._model.routing.channelStorage,vos.storageThresforConc) #in mg/L
         
-        # Organic pollution in grams [input is g/day]
-        self.organic = self._model.routing.organic #in grams
-        #self.organic = self._model.routing.organic/self._model.routing.channelStorage #in mg/L
-		
-        # Pathogen pollution in cfu [input is million cfu/day]
-        self.pathogen = self._model.routing.pathogen #in million cfu
-        #self.pathogen = self._model.routing.pathogen/self._model.routing.channelStorage #in million cfu/L
-        
+        # Aspects related to organic pollution
+        self.BODload = self._model.routing.BODload #in grams
+        self.routedBOD = self._model.routing.routedBOD #in grams
+        self.organic = vos.getValDivZero(self._model.routing.routedBOD, self._model.routing.channelStorage,vos.storageThresforConc) #in mg/L
+
+        # Aspects related to pathogen pollution
+        self.FCload = self._model.routing.FCload #in million cfu
+        self.routedFC = self._model.routing.routedFC #in million cfu
+        self.pathogen = vos.getValDivZero(self._model.routing.routedFC, self._model.routing.channelStorage,vos.storageThresforConc) #in million cfu/L
+
     def additional_post_processing(self):
         # In this method/function, users can add their own post-processing.
         

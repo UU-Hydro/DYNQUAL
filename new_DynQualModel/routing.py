@@ -56,9 +56,9 @@ class Routing(object):
         try:
             result['waterTemperature']        = self.waterTemp                   #  K      ; water temperature
             result['iceThickness']            = self.iceThickness                #  m      ; ice thickness
-            result['salinity']                = self.salinity                    #  g TDS  ; routed salinity load (for conversion to salinity pollution in mg/L)
-            result['organic']                 = self.organic                     #  g BOD  ; routed organic load (for conversion to organic pollution mg/L)
-            result['pathogen']                = self.pathogen                    #  cfu    ; routed pathogen load (for conversion to pathogen pollution in cfu/100mL)
+            result['routedTDS']               = self.routedTDS                   #  g TDS  ; routed TDS load (for conversion to salinity pollution in mg/L)
+            result['routedBOD']               = self.routedBOD                   #  g BOD  ; routed BOD load (for conversion to organic pollution mg/L)
+            result['routedFC']                = self.routedFC                    #  cfu    ; routed FC load (for conversion to pathogen pollution in cfu/100mL)
         except:
             logger.info("Water quality elements not simulated")
         
@@ -311,9 +311,9 @@ class Routing(object):
         if self.method == "accuTravelTime" or "kinematicWave": self.quality = False
         self.quality = True
         print("waterTemperature =",self.quality)
-        print("Salinity = ",self.quality)
+        print("Salinity = ", self.quality)
         print("Organic = ", self.quality)
-        print("Pathogen= ", self.quality)
+        print("Pathogen = ", self.quality)
         
         if self.quality:
             
@@ -456,9 +456,9 @@ class Routing(object):
                 
             else:
             #- Path to (non-natural) TDS, BOD, FC loading inputs
-                self.salinityNC = vos.getFullPath(iniItems.routingOptions["salinityNC"], self.inputDir)
-                self.organicNC = vos.getFullPath(iniItems.routingOptions["organicNC"], self.inputDir)
-                self.pathogenNC = vos.getFullPath(iniItems.routingOptions["pathogenNC"], self.inputDir)
+                self.TDSloadNC = vos.getFullPath(iniItems.routingOptions["TDSloadNC"], self.inputDir)
+                self.BODloadNC = vos.getFullPath(iniItems.routingOptions["BODloadNC"], self.inputDir)
+                self.FCloadNC = vos.getFullPath(iniItems.routingOptions["FCloadNC"], self.inputDir)
                                
         # get the initialConditions
         self.getICs(iniItems, initialConditions)
@@ -490,9 +490,9 @@ class Routing(object):
             if self.quality:
                 self.waterTemp               = vos.readPCRmapClone(iniItems.routingOptions['waterTemperatureIni'],self.cloneMap,self.tmpDir,self.inputDir)
                 self.iceThickness               = vos.readPCRmapClone(iniItems.routingOptions['iceThicknessIni'],self.cloneMap,self.tmpDir,self.inputDir)
-                self.salinity = vos.readPCRmapClone(iniItems.routingOptions['salinityIni'],self.cloneMap,self.tmpDir,self.inputDir) #initial conditions for salinity pollution
-                self.organic = vos.readPCRmapClone(iniItems.routingOptions['organicIni'],self.cloneMap,self.tmpDir,self.inputDir) #initial conditions for organic pollution
-                self.pathogen = vos.readPCRmapClone(iniItems.routingOptions['pathogenIni'],self.cloneMap,self.tmpDir,self.inputDir) #initial conditions for pathogen pollution
+                self.routedTDS = vos.readPCRmapClone(iniItems.routingOptions['routedTDSIni'],self.cloneMap,self.tmpDir,self.inputDir) #initial conditions for salinity pollution
+                self.routedBOD = vos.readPCRmapClone(iniItems.routingOptions['routedBODIni'],self.cloneMap,self.tmpDir,self.inputDir) #initial conditions for organic pollution
+                self.routedFC = vos.readPCRmapClone(iniItems.routingOptions['routedFCIni'],self.cloneMap,self.tmpDir,self.inputDir) #initial conditions for pathogen pollution
                 
             # Initial conditions for calculating average irrigation demand and net liquid transferred to the soil for irrigation return flow calculations
                 if self.calculateLoads:
@@ -515,9 +515,9 @@ class Routing(object):
             if self.quality:
                 self.waterTemp               = iniConditions['routing']['waterTemperature']
                 self.iceThickness            = iniConditions['routing']['iceThickness']
-                self.salinity               = iniConditions['routing']['salinity']
-                self.organic               = iniConditions['routing']['organic']
-                self.pathogen              = iniConditions['routing']['pathogen']
+                self.routedTDS               = iniConditions['routing']['routedTDS']
+                self.routedBOD               = iniConditions['routing']['routedBOD']
+                self.routedFC              = iniConditions['routing']['routedFC']
                 
                 if self.calculateLoads:    
                     self.avg_irrGrossDemand   = iniConditions['routing']['avg_irrGrossDemand']      
@@ -544,9 +544,9 @@ class Routing(object):
             self.channelStorageTimeBefore = self.channelStorage
             self.totEW = self.channelStorage * self.waterTemp*self.specificHeatWater * self.densityWater
             self.temp_water_height = yMean = self.eta * pow (self.avgDischarge, self.nu)
-            self.salinity = pcr.ifthen(self.landmask, pcr.cover(self.salinity, 0.0))
-            self.organic = pcr.ifthen(self.landmask, pcr.cover(self.organic, 0.0))
-            self.pathogen = pcr.ifthen(self.landmask, pcr.cover(self.pathogen,  0.0))
+            self.routedTDS = pcr.ifthen(self.landmask, pcr.cover(self.routedTDS, 0.0))
+            self.routedBOD = pcr.ifthen(self.landmask, pcr.cover(self.routedBOD, 0.0))
+            self.routedFC = pcr.ifthen(self.landmask, pcr.cover(self.routedFC,  0.0))
             
             if self.calculateLoads:  
                 self.avg_irrGrossDemand   = pcr.ifthen(self.landmask, pcr.cover(self.avg_irrGrossDemand,   0.0))
@@ -2803,9 +2803,9 @@ class Routing(object):
         self.Irr_TDSload = self.Irr_RF * self.IrrTDS_EfflConc #g/day
         
         #Combined loadings
-        self.TDSload = (self.Dom_TDSload + self.Man_TDSload + self.USR_TDSload + self.Irr_TDSload)
-        self.BODload = (self.Dom_BODload + self.Man_BODload + self.USR_BODload + self.intLiv_BODload + self.extLiv_BODload)
-        self.FCload = (self.Dom_FCload + self.Man_FCload + self.USR_FCload + self.intLiv_FCload + self.extLiv_FCload)
+        self.TDSload = (self.Dom_TDSload + self.Man_TDSload + self.USR_TDSload + self.Irr_TDSload) #g day-1
+        self.BODload = (self.Dom_BODload + self.Man_BODload + self.USR_BODload + self.intLiv_BODload + self.extLiv_BODload) #g day-1
+        self.FCload = (self.Dom_FCload + self.Man_FCload + self.USR_FCload + self.intLiv_FCload + self.extLiv_FCload) #million cfu day-1
         
     def readPollutantLoadings(self, currTimeStep):
         #Use pre-calculated pollutant loadings
@@ -2813,7 +2813,7 @@ class Routing(object):
         
         # read TDS loadings (combined from domestic, manufacturing, urban surface runoff and irrigation sources)
         self.TDSload = vos.netcdf2PCRobjClone(\
-                                 self.salinityNC,'TDS',\
+                                 self.TDSloadNC,'TDS',\
                                  str(currTimeStep.fulldate), 
                                  useDoy = None,
                                  cloneMapFileName=self.cloneMap,\
@@ -2821,7 +2821,7 @@ class Routing(object):
 
         #read BOD loadings (combined from domestic, manufacturing, urban surface runoff and livestock sources)
         self.BODload = vos.netcdf2PCRobjClone(\
-                                 self.organicNC,'BOD',\
+                                 self.BODloadNC,'BOD',\
                                  str(currTimeStep.fulldate), 
                                  useDoy = None,
                                  cloneMapFileName=self.cloneMap,\
@@ -2829,7 +2829,7 @@ class Routing(object):
 
         #read FC loadings (combined from domestic, manufacturing, urban surface runoff and livestock sources)
         self.FCload = vos.netcdf2PCRobjClone(\
-                                 self.pathogenNC,'FC',\
+                                 self.FCloadNC,'FC',\
                                  str(currTimeStep.fulldate), 
                                  useDoy = None,
                                  cloneMapFileName=self.cloneMap,\
@@ -3046,10 +3046,10 @@ class Routing(object):
         self.travel_time = 1 #model setup for daily timestep
         
         ###Salinity load (conservative substances approach)
-        self.salinity = self.salinity + self.TDSload 
+        self.routedTDS = self.routedTDS + self.TDSload 
         
         ###Organic load (non-conservative, temperature dependent decay)
-        self.organic = self.organic + self.BODload #get BOD load before decay
+        self.routedBOD = self.routedBOD + self.BODload #get BOD load before decay
         
         #---Temperature
         self.k_BOD = pcr.scalar(0.35)     #first-order degradation coefficient at 20C (van Vliet et al., 2021)
@@ -3058,10 +3058,10 @@ class Routing(object):
         BODdecay_temperature = cover(self.k_BOD*(self.watertempcorrection_BOD**(self.waterTemp_BOD - 20)),0.0)
         self.BODdecay = exp(-(BODdecay_temperature)* self.travel_time)
         
-        self.organic = self.organic * self.BODdecay # calculate BOD load after decay
+        self.organic = self.routedBOD * self.BODdecay # calculate BOD load after decay
         
         ###Pathogen load (non-conservative, decay coefficient a function of temperature, solar radiation and sedimentation)
-        self.pathogen = self.pathogen + self.FCload #get FC load before decay
+        self.routedFC = self.routedFC + self.FCload #get FC load before decay
               
         #---Temperature
         self.waterTemp_FC = self.waterTemp - pcr.scalar(273.15)    #water temperature in gridcell in C
@@ -3081,7 +3081,7 @@ class Routing(object):
         #---Combine decay coefficients
         self.FCdecay = exp(-(FCdecay_temperature + FCdecay_solarradiation + FCdecay_sedimentation)* self.travel_time)        
         
-        self.pathogen = self.pathogen * self.FCdecay #calculate FC load after decay
+        self.routedFC = self.routedFC * self.FCdecay #calculate FC load after decay
         
     def qualityRouting(self, timeSec):
         
@@ -3092,16 +3092,16 @@ class Routing(object):
         self.volumeEW = (self.volumeEW +pcr.upstream(self.lddMap,dtotEWLat)-dtotEWLat)
         
         #Salinity (TDS) routing
-        dSalinityLat = channelTransFrac*self.salinity
-        self.salinity = (self.salinity +pcr.upstream(self.lddMap,dSalinityLat)-dSalinityLat)        
+        dTDSLat = channelTransFrac*self.routedTDS
+        self.routedTDS = (self.routedTDS +pcr.upstream(self.lddMap,dTDSLat)-dTDSLat)        
         
         #Organic (BOD) routing
-        dOrganicLat = channelTransFrac*self.organic
-        self.organic = (self.organic +pcr.upstream(self.lddMap,dOrganicLat)-dOrganicLat)
+        dBODLat = channelTransFrac*self.routedBOD
+        self.routedBOD = (self.routedBOD +pcr.upstream(self.lddMap,dBODLat)-dBODLat)
                 
         #Pathogen (FC) routing
-        dPathogenLat = channelTransFrac*self.pathogen
-        self.pathogen = (self.pathogen +pcr.upstream(self.lddMap,dPathogenLat)-dPathogenLat)
+        dFCLat = channelTransFrac*self.routedFC
+        self.routedFC = (self.routedFC +pcr.upstream(self.lddMap,dFCLat)-dFCLat)
 
     def energyWaterBody(self):
         lakeTransFrac = pcr.max(pcr.min((self.WaterBodies.waterBodyOutflow) / (self.waterBodyStorageTimeBefore), 1.0),0.0)
@@ -3118,28 +3118,25 @@ class Routing(object):
         lakeTransFrac = cover(ifthen(self.WaterBodies.waterBodyOut, lakeTransFrac), 0.0)
         
         #Salinity (amount in water body)
-        salinityTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-         pcr.areatotal(pcr.ifthen(self.landmask,self.salinity),\
-         pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.salinity)
-        self.volumeSalinity = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., salinityTotal*lakeTransFrac),salinityTotal)
-        self.remainingVolumeSalinity = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * salinityTotal), 0.0)
+        wbTDSTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
+         pcr.areatotal(pcr.ifthen(self.landmask,self.routedTDS),\
+         pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedTDS)
+        self.wbVolumeTDS = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbTDSTotal*lakeTransFrac),wbTDSTotal)
+        self.wbRemainingVolumeTDS = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbTDSTotal), 0.0)
         
         #Organic (amount in water body)
-        organicTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-         pcr.areatotal(pcr.ifthen(self.landmask,self.organic),\
-         pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.organic)
-        self.volumeOrganic = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., organicTotal*lakeTransFrac),organicTotal)
-        self.remainingVolumeOrganic = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * organicTotal), 0.0)
+        wbBODTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
+         pcr.areatotal(pcr.ifthen(self.landmask,self.routedBOD),\
+         pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedBOD)
+        self.wbVolumeBOD = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbBODTotal*lakeTransFrac),wbBODTotal)
+        self.wbRemainingVolumeBOD = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbBODTotal), 0.0)
         
         #Pathogen (amount in water body)
-        lakeTransFrac = pcr.max(pcr.min((self.WaterBodies.waterBodyOutflow) / (self.waterBodyStorageTimeBefore), 1.0),0.0)
-        lakeTransFrac = cover(ifthen(self.WaterBodies.waterBodyOut, lakeTransFrac), 0.0)
-
-        pathogenTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-         pcr.areatotal(pcr.ifthen(self.landmask,self.pathogen),\
-         pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.pathogen)
-        self.volumePathogen = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., pathogenTotal*lakeTransFrac),pathogenTotal)
-        self.remainingVolumePathogen = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * pathogenTotal), 0.0)
+        wbFCTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
+         pcr.areatotal(pcr.ifthen(self.landmask,self.routedFC),\
+         pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedFC)
+        self.wbVolumeFC = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbFCTotal*lakeTransFrac),wbFCTotal)
+        self.wbRemainingVolumeFC = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbFCTotal), 0.0)
 
     def energyWaterBodyAverage(self):
         
@@ -3175,25 +3172,25 @@ class Routing(object):
     def qualityWaterBodyAverage(self):
         
         #Salinity (averaged over water body)
-        salinityTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-         pcr.areatotal(pcr.ifthen(self.landmask,self.remainingVolumeSalinity),\
-         pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.salinity)
-        salinityAverageLakeCell = cover(salinityTotal * self.cellArea \
-          /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), salinityTotal)
-        self.salinity = cover(salinityAverageLakeCell, vos.MV)
+        wbTDSTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
+         pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeTDS),\
+         pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedTDS)
+        TDSAverageLakeCell = cover(wbTDSTotal * self.cellArea \
+          /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbTDSTotal)
+        self.routedTDS = cover(TDSAverageLakeCell, vos.MV)
         
         #Organic (averaged over water body)
-        organicTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-         pcr.areatotal(pcr.ifthen(self.landmask,self.remainingVolumeOrganic),\
-         pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.organic)
-        organicAverageLakeCell = cover(organicTotal * self.cellArea \
-          /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), organicTotal)
-        self.organic = cover(organicAverageLakeCell, vos.MV)
+        wbBODTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
+         pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeBOD),\
+         pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedBOD)
+        BODAverageLakeCell = cover(wbBODTotal * self.cellArea \
+          /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbBODTotal)
+        self.routedBOD = cover(BODAverageLakeCell, vos.MV)
         
         #Pathogen (averaged over water body)
-        pathogenTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-         pcr.areatotal(pcr.ifthen(self.landmask,self.remainingVolumePathogen),\
-         pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.pathogen)
-        pathogenAverageLakeCell = cover(pathogenTotal * self.cellArea \
-          /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), pathogenTotal)
-        self.pathogen = cover(pathogenAverageLakeCell, vos.MV)
+        wbFCTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
+         pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeFC),\
+         pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedFC)
+        FCAverageLakeCell = cover(wbFCTotal * self.cellArea \
+          /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbFCTotal)
+        self.routedFC = cover(FCAverageLakeCell, vos.MV)

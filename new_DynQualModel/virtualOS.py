@@ -57,6 +57,7 @@ filecache = dict()
 # Global variables:
 MV = 1e20
 smallNumber = 1E-39
+storageThresforConc = 100000. #define a minimum channel storage threshold (in m3 per gridcell) for calculating in-stream concentrations
 
 # and set pi
 pi = math.pi
