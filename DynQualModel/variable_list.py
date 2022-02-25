@@ -235,6 +235,17 @@ description[pcrglobwb_variable_name]       = None
 comment[pcrglobwb_variable_name]           = None
 latex_symbol[pcrglobwb_variable_name]      = None
 
+# fraction direct runoff
+pcrglobwb_variable_name = 'frac_surfaceRunoff'
+netcdf_short_name[pcrglobwb_variable_name] = 'fraction_surface_runoff'
+netcdf_unit[pcrglobwb_variable_name]       = '-'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None 
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = None
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = "fraction of runoff that is surface runoff"
+latex_symbol[pcrglobwb_variable_name]      = None
+
 # interflowTotal                  
 pcrglobwb_variable_name = 'interflowTotal'
 netcdf_short_name[pcrglobwb_variable_name] = 'interflow'

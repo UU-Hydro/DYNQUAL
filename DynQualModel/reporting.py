@@ -242,7 +242,7 @@ class Reporting(object):
         self.temperature    = self._model.meteo.temperature
         self.referencePotET = self._model.meteo.referencePotET 
 
-        if self.offlineRun == False:
+        if self.offlineRun == "False":
         # routing options only required when coupled with PCR-GLOBWB
 
             self.totalLandSurfacePotET = self._model.landSurface.totalPotET 
@@ -308,6 +308,7 @@ class Reporting(object):
         
         # runoff (m) from land surface - not including local changes in water bodies
         self.runoff = self._model.routing.runoff
+        self.frac_surfaceRunoff = self._model.routing.runoff
         
         # discharge (unit: m3/s)
         self.discharge = self._model.routing.disChanWaterBody
@@ -377,7 +378,7 @@ class Reporting(object):
                                 pcr.scalar(self._model.routing.WaterBodies.waterBodyIds) > 0.,\
                                            self._model.routing.WaterBodies.waterBodyStorage))     # Note: This value is after lake/reservoir outflow.
 
-        if self.offlineRun == False:
+        if self.offlineRun == "False":
         # routing options only required when coupled with PCR-GLOBWB
         
             # fossil groundwater storage

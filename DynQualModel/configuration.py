@@ -80,6 +80,22 @@ class Configuration(object):
         # the main output directory (for runs with merging processes)
         self.main_output_directory = self.globalOptions['outputDir']
 
+        #water quality options
+        try:
+            self.offlineRun = self.routingOptions['offlineRun'] == "True"
+        except:
+            self.offlineRun = False
+        
+        try:
+            self.quality = self.routingOptions['quality'] == "True"
+        except:
+            self.quality = False
+        
+        try:
+            self.calculateLoads = self.routingOptions['calculateLoads'] == "True"
+        except:
+            self.calculateLoads = False        
+
     def set_options_for_coupling_betweeen_pcrglobwb_and_modflow(self):
 
         self.online_coupling_between_pcrglobwb_and_modflow = False
