@@ -1372,7 +1372,7 @@ class Routing(object):
             
                 if self.calculateLoads:
                     self.readPollutantLoadingsInputData(currTimeStep, landSurface, groundwater)
-                    self.calculatePollutantLoadings(currTimeStep)
+                    self.calculatePollutantLoadings()
                 else:
                     self.readPollutantLoadings(currTimeStep)    
                        
@@ -1531,8 +1531,8 @@ class Routing(object):
                 self.readPowerplantData(currTimeStep)
                 
                 if self.calculateLoads:
-                    self.readPollutantLoadingsInputData(currTimeStep, landSurface = None, groundwater = None)
-                    self.calculatePollutantLoadings(currTimeStep)            
+                    self.readPollutantLoadingsInputData(currTimeStep, landSurface, groundwater)
+                    self.calculatePollutantLoadings()            
                 else:
                     self.readPollutantLoadings(currTimeStep)
             
@@ -2695,7 +2695,8 @@ class Routing(object):
                                   LatitudeLongitude = True,specificFillValue = None) #fraction of manufacturing wastewater directly discharged (5 arc-min)
         self.ratio_man_WWdirect = pcr.cover(self.ratio_man_WWdirect,0) #TODO ED: missing values in input file
 
-    def calculatePollutantLoadings(self, currTimeStep):
+    def calculatePollutantLoadings(self, timeSec = vos.secondsPerDay()): #TODO EDNIKO
+    #def calculatePollutantLoadings(self, currTimeStep):
         #calculate pollutant loadings directly
         logger.info("Calculating pollutant loadings")
         
