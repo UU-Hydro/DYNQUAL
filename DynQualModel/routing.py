@@ -3062,7 +3062,7 @@ class Routing(object):
         BODdecay_temperature = cover(self.k_BOD*(self.watertempcorrection_BOD**(self.waterTemp_BOD - 20)),0.0)
         self.BODdecay = exp(-(BODdecay_temperature)* self.travel_time)
         
-        self.organic = self.routedBOD * self.BODdecay # calculate BOD load after decay
+        self.routedBOD = self.routedBOD * self.BODdecay # calculate BOD load after decay
         
         ###Pathogen load (non-conservative, decay coefficient a function of temperature, solar radiation and sedimentation)
         self.routedFC = self.routedFC + self.FCload #get FC load before decay
