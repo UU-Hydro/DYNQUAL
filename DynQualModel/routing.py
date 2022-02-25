@@ -1371,11 +1371,12 @@ class Routing(object):
                 self.readPowerplantData(currTimeStep)
             
                 if self.calculateLoads:
-                    self.readPollutantLoadingsInputData(currTimeStep, landSurface, groundwater)
-                    self.calculatePollutantLoadings()
+                    self.readPollutantLoadingsInputData(currTimeStep)
                 else:
                     self.readPollutantLoadings(currTimeStep)    
-                       
+            
+            if self.calculateLoads:
+                self.calculatePollutantLoadings(currTimeStep,landSurface,groundwater)
             self.channelStorageTimeBefore = pcr.max(0.0, self.channelStorage)
             self.energyLocal(meteo, landSurface, groundwater)
             self.energyWaterBody()
@@ -1531,11 +1532,13 @@ class Routing(object):
                 self.readPowerplantData(currTimeStep)
                 
                 if self.calculateLoads:
-                    self.readPollutantLoadingsInputData(currTimeStep, landSurface, groundwater)
-                    self.calculatePollutantLoadings()            
+                    self.readPollutantLoadingsInputData(currTimeStep)       
                 else:
                     self.readPollutantLoadings(currTimeStep)
             
+            if self.calculateLoads:
+                self.calculatePollutantLoadings(currTimeStep)
+
             self.channelStorageTimeBefore = pcr.max(0.0, self.channelStorage)
             self.energyLocal_routing_only(meteo)
             self.energyWaterBody()
@@ -2514,7 +2517,7 @@ class Routing(object):
         self.deltaT = pcr.scalar(7.) #difference between effluent temperature and river temperature (K) (van Vliet et al., 2012) 
         self.PowTwload = self.PowRF * self.specificHeatWater * self.densityWater * self.deltaT #W
     
-    def readPollutantLoadingsInputData(self, currTimeStep, landSurface = None, groundwater = None):
+    def readPollutantLoadingsInputData(self, currTimeStep):
         logger.info("Loading input data required to calculate pollutant loadings")    
         
         #Domestic
@@ -2524,12 +2527,6 @@ class Routing(object):
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #input pathway for gridded population file (5 arc-mins)    
-    
-        #- Fraction of direct runoff directly from PCR-GLOBWB (direct runoff / total runoff)    
-        if self.offlineRun:        
-            self.frac_surfaceRunoff = vos.getValDivZero(self.directRunoff, self.runoff)
-        else:            
-            self.frac_surfaceRunoff = vos.getValDivZero(landSurface.directRunoff, (landSurface.landSurfaceRunoff + groundwater.baseflow))
         
         #Manufacturing
         self.ManWWp = vos.netcdf2PCRobjClone(\
@@ -2546,12 +2543,6 @@ class Routing(object):
                                              useDoy = None,
                                              cloneMapFileName=self.cloneMap,\
                                              LatitudeLongitude = True,specificFillValue = None) #fraction urban area (0-1)
-        
-        #- Urban surface runoff directly from PCR-GLOBWB (gridcell surface runoff [m/day] * fraction urban area in gridcell * cell area)
-        if self.offlineRun:        
-            self.USR_RF = self.directRunoff * self.urban_area_fraction * self.cellArea #m3 day
-        else:            
-            self.USR_RF = landSurface.directRunoff * self.urban_area_fraction * self.cellArea #m3 day
 
         #Livestock
         self.BuffaloPopulation = vos.netcdf2PCRobjClone(\
@@ -2622,21 +2613,6 @@ class Routing(object):
         self.HorseDensity = self.HorsePopulation/ self.cellArea_km2
         self.PigDensity = (self.PigPopulation * 0.3)/ self.cellArea_km2
         self.SheepDensity = (self.SheepPopulation * 0.1)/ self.cellArea_km2
-    
-        #Irrigation
-        #- Irrigation return flows calculated directly from PCR-GLOBWB (from direct runoff, interflow and baseflow) - TODO EDEDWIN
-        if self.offlineRun:
-            self.irr_rf_from_direct_runoff = self.directRunoff * vos.getValDivZero(self.avg_irrGrossDemand, (self.avg_irrGrossDemand + self.avg_netLqWaterToSoil))
-            self.irr_rf_from_interflow     = self.interflow * vos.getValDivZero(self.avg_irrGrossDemand, ( self.avg_irrGrossDemand + self.avg_netLqWaterToSoil))
-            self.irr_rf_from_baseflow     =  self.baseflow       * vos.getValDivZero(self.avg_irrGrossDemand, ( self.avg_irrGrossDemand + self.avg_netLqWaterToSoil)) 
-        else:
-            self.irr_rf_from_direct_runoff = landSurface.directRunoff * vos.getValDivZero(landSurface.irrGrossDemand, ( landSurface.irrGrossDemand + landSurface.netLqWaterToSoil))
-            self.irr_rf_from_interflow     = landSurface.interflowTotal * vos.getValDivZero(self.avg_irrGrossDemand, ( self.avg_irrGrossDemand + self.avg_netLqWaterToSoil))
-            self.irr_rf_from_baseflow     =  groundwater.baseflow       * vos.getValDivZero(self.avg_irrGrossDemand, ( self.avg_irrGrossDemand + self.avg_netLqWaterToSoil))
-
-        self.Irr_RF = (self.irr_rf_from_direct_runoff +\
-                       self.irr_rf_from_interflow +\
-                       self.irr_rf_from_baseflow) * self.cellArea  # - total irirgation return flow in volume units (m3 day-1) 
                                   
         #Wastewater Pathways
         self.ratio_WWt_Tertiary = vos.netcdf2PCRobjClone(\
@@ -2645,7 +2621,7 @@ class Routing(object):
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True, specificFillValue = None) #ratio of tertiary treatment (5 arc-min)
-        self.ratio_WWt_Tertiary = pcr.cover(self.ratio_WWt_Tertiary,0) #TODO ED: missing values in input file
+        self.ratio_WWt_Tertiary = pcr.cover(self.ratio_WWt_Tertiary,0)
                                   
         self.ratio_WWt_Secondary = vos.netcdf2PCRobjClone(\
                                  self.WWtPathwaysNC,'WWt_Secondary',\
@@ -2653,7 +2629,7 @@ class Routing(object):
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #ratio of secondary treatment (5 arc-min)
-        self.ratio_WWt_Secondary = pcr.cover(self.ratio_WWt_Secondary,0) #TODO ED: missing values in input file
+        self.ratio_WWt_Secondary = pcr.cover(self.ratio_WWt_Secondary,0)
                                           
         self.ratio_WWt_Primary = vos.netcdf2PCRobjClone(\
                                  self.WWtPathwaysNC,'WWt_Primary',\
@@ -2661,7 +2637,7 @@ class Routing(object):
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #ratio of primary treatment (5 arc-min)
-        self.ratio_WWt_Primary = pcr.cover(self.ratio_WWt_Primary,0) #TODO ED: missing values in input file
+        self.ratio_WWt_Primary = pcr.cover(self.ratio_WWt_Primary,0)
                                           
         self.ratio_WWcut = vos.netcdf2PCRobjClone(\
                                  self.WWtPathwaysNC,'WWcut',\
@@ -2669,7 +2645,7 @@ class Routing(object):
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #fraction of wastewater collected, but untreated (5 arc-min)
-        self.ratio_WWcut = pcr.cover(self.ratio_WWcut,0) #TODO ED: missing values in input file
+        self.ratio_WWcut = pcr.cover(self.ratio_WWcut,0) 
                                           
         self.ratio_dom_WWbs = vos.netcdf2PCRobjClone(\
                                  self.WWtPathwaysNC,'dom_WWbs',\
@@ -2677,7 +2653,7 @@ class Routing(object):
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #fraction of domestic wastewater via basic sanitation (5 arc-min)
-        self.ratio_dom_WWbs = pcr.cover(self.ratio_dom_WWbs,0) #TODO ED: missing values in input file
+        self.ratio_dom_WWbs = pcr.cover(self.ratio_dom_WWbs,0)
                                           
         self.ratio_dom_WWod = vos.netcdf2PCRobjClone(\
                                  self.WWtPathwaysNC,'dom_WWod',\
@@ -2685,7 +2661,7 @@ class Routing(object):
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #fraction of domestic wastewater via open defecation (5 arc-min)
-        self.ratio_dom_WWod = pcr.cover(self.ratio_dom_WWod,0) #TODO ED: missing values in input file
+        self.ratio_dom_WWod = pcr.cover(self.ratio_dom_WWod,0) 
                                   
         self.ratio_man_WWdirect = vos.netcdf2PCRobjClone(\
                                  self.WWtPathwaysNC,'man_WWdirect',\
@@ -2693,10 +2669,9 @@ class Routing(object):
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #fraction of manufacturing wastewater directly discharged (5 arc-min)
-        self.ratio_man_WWdirect = pcr.cover(self.ratio_man_WWdirect,0) #TODO ED: missing values in input file
+        self.ratio_man_WWdirect = pcr.cover(self.ratio_man_WWdirect,0)
 
-    def calculatePollutantLoadings(self, timeSec = vos.secondsPerDay()): #TODO EDNIKO
-    #def calculatePollutantLoadings(self, currTimeStep):
+    def calculatePollutantLoadings(self, currTimeStep, landSurface = None, groundwater = None):
         #calculate pollutant loadings directly
         logger.info("Calculating pollutant loadings")
         
@@ -2713,6 +2688,12 @@ class Routing(object):
                      (self.ratio_WWt_Secondary * self.FC_Sec_RemEff) +\
                      (self.ratio_WWt_Primary * self.FC_Pri_RemEff) +\
                      (self.ratio_WWcut * self.FC_WWcut_RemEff)
+        
+        #- Fraction of direct runoff directly from PCR-GLOBWB (direct runoff / total runoff)    
+        if self.offlineRun:        
+            self.frac_surfaceRunoff = vos.getValDivZero(self.directRunoff, self.runoff)
+        else:            
+            self.frac_surfaceRunoff = vos.getValDivZero(landSurface.directRunoff, (landSurface.landSurfaceRunoff + groundwater.baseflow))
         
         #Domestic sector-specific wastewater pathways        
         TDS_Rem_BasicSan = self.ratio_dom_WWbs * self.TDS_dom_WWbs_RemEff     #Removal of TDS due to basic sanitation practices
@@ -2731,6 +2712,11 @@ class Routing(object):
         self.Man_FCload = (self.ManWWp * self.ManFC_EfflConc * (1 - FC_RemEff))/ 100. #million cfu/day
         
         #Urban surface runoff loadings: USR return flow [m3/day] * average USR effluent concentration [mg/L; cfu/100ml]
+        if self.offlineRun:        
+            self.USR_RF = self.directRunoff * self.urban_area_fraction * self.cellArea #m3 day
+        else:            
+            self.USR_RF = landSurface.directRunoff * self.urban_area_fraction * self.cellArea #m3 day
+        
         self.USR_TDSload = self.USR_RF * self.USRTDS_EfflConc * (1 - TDS_RemEff) #g/day
         self.USR_BODload = self.USR_RF * self.USRBOD_EfflConc * (1 - BOD_RemEff) #g/day
         self.USR_FCload = (self.USR_RF * self.USRFC_EfflConc * (1 - FC_RemEff))/ 100. #million cfu/day
@@ -2805,6 +2791,19 @@ class Routing(object):
                               / 1000000. #million cfu/day
         
         #Irrigation loadings: Irrigation return flow (m3/day) * soil TDS (mg/L)
+        #- Irrigation return flows calculated directly from PCR-GLOBWB (from direct runoff, interflow and baseflow) - TODO EDEDWIN
+        if self.offlineRun:
+            self.irr_rf_from_direct_runoff = self.directRunoff * vos.getValDivZero(self.avg_irrGrossDemand, (self.avg_irrGrossDemand + self.avg_netLqWaterToSoil))
+            self.irr_rf_from_interflow     = self.interflow * vos.getValDivZero(self.avg_irrGrossDemand, ( self.avg_irrGrossDemand + self.avg_netLqWaterToSoil))
+            self.irr_rf_from_baseflow     =  self.baseflow       * vos.getValDivZero(self.avg_irrGrossDemand, ( self.avg_irrGrossDemand + self.avg_netLqWaterToSoil)) 
+        else:
+            self.irr_rf_from_direct_runoff = landSurface.directRunoff * vos.getValDivZero(landSurface.irrGrossDemand, ( landSurface.irrGrossDemand + landSurface.netLqWaterToSoil))
+            self.irr_rf_from_interflow     = landSurface.interflowTotal * vos.getValDivZero(self.avg_irrGrossDemand, ( self.avg_irrGrossDemand + self.avg_netLqWaterToSoil))
+            self.irr_rf_from_baseflow     =  groundwater.baseflow       * vos.getValDivZero(self.avg_irrGrossDemand, ( self.avg_irrGrossDemand + self.avg_netLqWaterToSoil))
+
+        self.Irr_RF = (self.irr_rf_from_direct_runoff +\
+                       self.irr_rf_from_interflow +\
+                       self.irr_rf_from_baseflow) * self.cellArea  # - total irirgation return flow in volume units (m3 day-1) 
         self.Irr_TDSload = self.Irr_RF * self.IrrTDS_EfflConc #g/day
         
         #Combined loadings
