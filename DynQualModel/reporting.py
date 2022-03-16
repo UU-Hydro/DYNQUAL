@@ -28,10 +28,9 @@ class Reporting(object):
         self._modelTime = modelTime
 
         self.offlineRun = configuration.routingOptions['offlineRun'] #for offline DynQual runs
-        self.loadsPerSector = configuration.routingOptions['loadsPerSector'] #for calculating loads per sector
-        
-        print("Offline Run = ", self.offlineRun)
-        print("loadsPerSector = ", self.loadsPerSector)
+        self.quality = configuration.routingOptions['quality'] #for water quality modelling
+        self.calculateLods = configuration.routingOptions['calculateLoads'] #for calculating pollutant loads in model run
+        self.loadsPerSector = configuration.routingOptions['loadsPerSector'] #for calculating pollutant loads per sector
 
         # output directory storing netcdf files:
         self.outNCDir  = str(configuration.outNCDir)
@@ -309,6 +308,12 @@ class Reporting(object):
             # total evaporation (m), from land and water fractions
             self.totalEvaporation = self._model.landSurface.actualET + \
                                     self._model.routing.waterBodyEvaporation
+        
+        if self.offlineRun == "True":
+        # for reporting out hydrology when DynQual is running in offline configuration
+            self.directRunoff         = self._model.routing.directRunoff
+            self.interflowTotal       = self._model.routing.interflowTotal
+            self.baseflow             = self._model.routing.baseflow        
         
         # runoff (m) from land surface - not including local changes in water bodies
         self.runoff = self._model.routing.runoff

@@ -2543,12 +2543,12 @@ class Routing(object):
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True)
         
-        self.interflow = vos.netcdf2PCRobjClone(\
-                                  interflowNC,"interflow",\
-                                  str(currTimeStep.fulldate),
-                                  useDoy = None,
-                                  cloneMapFileName=self.cloneMap,\
-                                  LatitudeLongitude = True)
+        self.interflowTotal = vos.netcdf2PCRobjClone(\
+                                        interflowNC,"interflow",\
+                                        str(currTimeStep.fulldate),
+                                        useDoy = None,
+                                        cloneMapFileName=self.cloneMap,\
+                                        LatitudeLongitude = True)
                                   
         self.directRunoff = vos.netcdf2PCRobjClone(\
                                   directRunoffNC, "direct_runoff",\
@@ -2556,7 +2556,7 @@ class Routing(object):
                                   useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True)
-        self.runoff = self.directRunoff + self.interflow + self.baseflow
+        self.runoff = self.directRunoff + self.interflowTotal + self.baseflow
 
     def readPowerplantData(self, currTimeStep):
         logger.info("Reading powerplant data")
@@ -3007,7 +3007,7 @@ class Routing(object):
         self.dynamicFracWatBeforeRouting = self.dynamicFracWat
         self.dynamicFracWat = pcr.max(self.dynamicFracWat,0.001)
         landT= pcr.cover(self.directRunoff/landRunoff*pcr.max(self.iceThresTemp+0.1,self.temperatureKelvin-self.deltaTPrec)+\
-           self.interflow/landRunoff*pcr.max(self.iceThresTemp+0.1,self.temperatureKelvin)+\
+           self.interflowTotal/landRunoff*pcr.max(self.iceThresTemp+0.1,self.temperatureKelvin)+\
            self.baseflow/landRunoff*pcr.max(self.iceThresTemp+5.0,self.annualT),self.temperatureKelvin)
         iceHeatTransfer = self.heatTransferWater * (self.temperatureKelvin - self.iceThresTemp)
         waterHeatTransfer = self.heatTransferIce * (self.iceThresTemp - self.waterTemp)
