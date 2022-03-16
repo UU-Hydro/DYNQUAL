@@ -785,6 +785,61 @@ description[pcrglobwb_variable_name]       = None
 comment[pcrglobwb_variable_name]           = 'unrouted TDS loadings (for salinity pollution)'
 latex_symbol[pcrglobwb_variable_name]      = None
 
+# unrouted Domestic TDS loads
+pcrglobwb_variable_name = 'Dom_TDSload'
+netcdf_short_name[pcrglobwb_variable_name] = 'DomTDSload'
+netcdf_unit[pcrglobwb_variable_name]       = 'g.day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_DomTDS_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'unrouted Domestic TDS loadings (for salinity pollution)'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# unrouted Manufacturing TDS loads
+pcrglobwb_variable_name = 'Man_TDSload'
+netcdf_short_name[pcrglobwb_variable_name] = 'ManTDSload'
+netcdf_unit[pcrglobwb_variable_name]       = 'g.day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_ManTDS_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'unrouted Manufacturing TDS loadings (for salinity pollution)'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# unrouted Urban Surface Runoff TDS loads
+pcrglobwb_variable_name = 'USR_TDSload'
+netcdf_short_name[pcrglobwb_variable_name] = 'USRTDSload'
+netcdf_unit[pcrglobwb_variable_name]       = 'g.day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_USRTDS_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'unrouted Urban Surface Runoff TDS loadings (for salinity pollution)'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# Irr RF
+pcrglobwb_variable_name = 'Irr_RF'
+netcdf_short_name[pcrglobwb_variable_name] = 'Irr_RF'
+netcdf_unit[pcrglobwb_variable_name]       = 'm3 day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'irrigation_return_flow'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'irrigation return flows'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# unrouted Irr TDS loads
+pcrglobwb_variable_name = 'Irr_TDSload'
+netcdf_short_name[pcrglobwb_variable_name] = 'IrrTDSload'
+netcdf_unit[pcrglobwb_variable_name]       = 'g.day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_IrrTDS_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'unrouted irrigation TDS loadings (for salinity pollution)'
+latex_symbol[pcrglobwb_variable_name]      = None
+
 # unrouted BOD loads
 pcrglobwb_variable_name = 'BODload'
 netcdf_short_name[pcrglobwb_variable_name] = 'BODload'
@@ -796,6 +851,61 @@ description[pcrglobwb_variable_name]       = None
 comment[pcrglobwb_variable_name]           = 'unrouted BOD loadings (for organic pollution)'
 latex_symbol[pcrglobwb_variable_name]      = None
 
+# unrouted Domestic BOD loads
+pcrglobwb_variable_name = 'Dom_BODload'
+netcdf_short_name[pcrglobwb_variable_name] = 'DomBODload'
+netcdf_unit[pcrglobwb_variable_name]       = 'g.day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_DomBOD_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'unrouted Domestic BOD loadings (for organic pollution)'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# unrouted Manufacturing BOD loads
+pcrglobwb_variable_name = 'Man_BODload'
+netcdf_short_name[pcrglobwb_variable_name] = 'ManBODload'
+netcdf_unit[pcrglobwb_variable_name]       = 'g.day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_ManBOD_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'unrouted Manufacturing BOD loadings (for organic pollution)'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# unrouted Urban Surface Runoff BOD loads
+pcrglobwb_variable_name = 'USR_BODload'
+netcdf_short_name[pcrglobwb_variable_name] = 'USRBODload'
+netcdf_unit[pcrglobwb_variable_name]       = 'g.day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_USRBOD_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'unrouted Urban Surface Runoff BOD loadings (for organic pollution)'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# unrouted intensive livestock BOD loads
+pcrglobwb_variable_name = 'intLiv_BODload'
+netcdf_short_name[pcrglobwb_variable_name] = 'intLivBODload'
+netcdf_unit[pcrglobwb_variable_name]       = 'g.day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_intLivBOD_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'unrouted Intensive Livestock BOD loadings (for organic pollution)'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# unrouted extensive livestock BOD loads
+pcrglobwb_variable_name = 'extLiv_BODload'
+netcdf_short_name[pcrglobwb_variable_name] = 'extLivBODload'
+netcdf_unit[pcrglobwb_variable_name]       = 'g.day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_extLivBOD_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'unrouted Extensive Livestock BOD loadings (for organic pollution)'
+latex_symbol[pcrglobwb_variable_name]      = None
+
 # unrouted FC loads
 pcrglobwb_variable_name = 'FCload'
 netcdf_short_name[pcrglobwb_variable_name] = 'FCload'
@@ -805,6 +915,61 @@ netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
 netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_FC_loadings'
 description[pcrglobwb_variable_name]       = None
 comment[pcrglobwb_variable_name]           = 'unrouted FC loadings (for pathogen pollution)'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# unrouted Domestic FC loads
+pcrglobwb_variable_name = 'Dom_FCload'
+netcdf_short_name[pcrglobwb_variable_name] = 'DomFCload'
+netcdf_unit[pcrglobwb_variable_name]       = 'million_cfu.day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_DomFC_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'unrouted Domestic FC loadings (for pathogen pollution)'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# unrouted Manufacturing FC loads
+pcrglobwb_variable_name = 'Man_FCload'
+netcdf_short_name[pcrglobwb_variable_name] = 'ManFCload'
+netcdf_unit[pcrglobwb_variable_name]       = 'million_cfu.day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_ManFC_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'unrouted Manufacturing FC loadings (for pathogen pollution)'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# unrouted Urban Surface Runoff FC loads
+pcrglobwb_variable_name = 'USR_FCload'
+netcdf_short_name[pcrglobwb_variable_name] = 'USRFCload'
+netcdf_unit[pcrglobwb_variable_name]       = 'million_cfu.day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_USRFC_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'unrouted Urban Surface Runoff FC loadings (for pathogen pollution)'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# unrouted Intensive Livestock FC loads
+pcrglobwb_variable_name = 'intLiv_FCload'
+netcdf_short_name[pcrglobwb_variable_name] = 'intLivFCload'
+netcdf_unit[pcrglobwb_variable_name]       = 'million_cfu.day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_intLivFC_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'unrouted Intensive Livestock FC loadings (for pathogen pollution)'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# unrouted extensive Livestock FC loads
+pcrglobwb_variable_name = 'extLiv_FCload'
+netcdf_short_name[pcrglobwb_variable_name] = 'extLivFCload'
+netcdf_unit[pcrglobwb_variable_name]       = 'million_cfu.day-1'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'unrouted_extLivFC_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'unrouted Extensive Livestock FC loadings (for pathogen pollution)'
 latex_symbol[pcrglobwb_variable_name]      = None
 
 # unrouted Tw loads
@@ -829,6 +994,50 @@ description[pcrglobwb_variable_name]       = None
 comment[pcrglobwb_variable_name]           = 'TDS loadings routed through surface water network'
 latex_symbol[pcrglobwb_variable_name]      = None
 
+# routed Domestic TDS loads
+pcrglobwb_variable_name = 'routedDomTDS'
+netcdf_short_name[pcrglobwb_variable_name] = 'routedDomTDS'
+netcdf_unit[pcrglobwb_variable_name]       = 'g'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'routed_DomTDS_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'Domestic TDS loadings routed through surface water network'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# routed Manufacturing TDS loads
+pcrglobwb_variable_name = 'routedManTDS'
+netcdf_short_name[pcrglobwb_variable_name] = 'routedManTDS'
+netcdf_unit[pcrglobwb_variable_name]       = 'g'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'routed_ManTDS_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'Manufacturing TDS loadings routed through surface water network'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# routed Urban Surface Runoff TDS loads
+pcrglobwb_variable_name = 'routedUSRTDS'
+netcdf_short_name[pcrglobwb_variable_name] = 'routedUSRTDS'
+netcdf_unit[pcrglobwb_variable_name]       = 'g'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'routed_USRTDS_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'Urban Surface Runoff TDS loadings routed through surface water network'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# routed Irrigation TDS loads
+pcrglobwb_variable_name = 'routedIrrTDS'
+netcdf_short_name[pcrglobwb_variable_name] = 'routedIrrTDS'
+netcdf_unit[pcrglobwb_variable_name]       = 'g'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'routed_IrrTDS_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'Irrigation TDS loadings routed through surface water network'
+latex_symbol[pcrglobwb_variable_name]      = None
+
 # routed BOD loads
 pcrglobwb_variable_name = 'routedBOD'
 netcdf_short_name[pcrglobwb_variable_name] = 'routedBOD'
@@ -840,6 +1049,61 @@ description[pcrglobwb_variable_name]       = None
 comment[pcrglobwb_variable_name]           = 'BOD loadings routed through surface water network'
 latex_symbol[pcrglobwb_variable_name]      = None
 
+# routed Domestic BOD loads
+pcrglobwb_variable_name = 'routedDomBOD'
+netcdf_short_name[pcrglobwb_variable_name] = 'routedDomBOD'
+netcdf_unit[pcrglobwb_variable_name]       = 'g'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'routed_DomBOD_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'Domestic BOD loadings routed through surface water network'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# routed Manufacturing BOD loads
+pcrglobwb_variable_name = 'routedManBOD'
+netcdf_short_name[pcrglobwb_variable_name] = 'routedManBOD'
+netcdf_unit[pcrglobwb_variable_name]       = 'g'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'routed_ManBOD_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'Manufacturing BOD loadings routed through surface water network'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# routed Urban Surface Runoff BOD loads
+pcrglobwb_variable_name = 'routedUSRBOD'
+netcdf_short_name[pcrglobwb_variable_name] = 'routedUSRBOD'
+netcdf_unit[pcrglobwb_variable_name]       = 'g'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'routed_USRBOD_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'Urban Surface Runoff BOD loadings routed through surface water network'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# routed Intensive Livestock BOD loads
+pcrglobwb_variable_name = 'routedintLivBOD'
+netcdf_short_name[pcrglobwb_variable_name] = 'routedintLivBOD'
+netcdf_unit[pcrglobwb_variable_name]       = 'g'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'routed_intLivBOD_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'Intensive Livestock BOD loadings routed through surface water network'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# routed Extensive Livestock BOD loads
+pcrglobwb_variable_name = 'routedextLivBOD'
+netcdf_short_name[pcrglobwb_variable_name] = 'routedextLivBOD'
+netcdf_unit[pcrglobwb_variable_name]       = 'g'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'routed_extLivBOD_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'Extensive Livestock BOD loadings routed through surface water network'
+latex_symbol[pcrglobwb_variable_name]      = None
+
 # routed FC loads
 pcrglobwb_variable_name = 'routedFC'
 netcdf_short_name[pcrglobwb_variable_name] = 'routedFC'
@@ -849,6 +1113,61 @@ netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
 netcdf_long_name[pcrglobwb_variable_name]  = 'routed_FC_loadings'
 description[pcrglobwb_variable_name]       = None
 comment[pcrglobwb_variable_name]           = 'FC loadings routed through surface water network'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# routed Domestic FC loads
+pcrglobwb_variable_name = 'routedDomFC'
+netcdf_short_name[pcrglobwb_variable_name] = 'routedDomFC'
+netcdf_unit[pcrglobwb_variable_name]       = 'million_cfu'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'routed_DomFC_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'Domestic FC loadings routed through surface water network'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# routed Manufacturing FC loads
+pcrglobwb_variable_name = 'routedManFC'
+netcdf_short_name[pcrglobwb_variable_name] = 'routedManFC'
+netcdf_unit[pcrglobwb_variable_name]       = 'million_cfu'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'routed_ManFC_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'Manufacturing FC loadings routed through surface water network'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# routed Urban Surface Runoff FC loads
+pcrglobwb_variable_name = 'routedUSRFC'
+netcdf_short_name[pcrglobwb_variable_name] = 'routedUSRFC'
+netcdf_unit[pcrglobwb_variable_name]       = 'million_cfu'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'routed_USRFC_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'Urban Surface Runoff FC loadings routed through surface water network'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# routed Intensive Livestock FC loads
+pcrglobwb_variable_name = 'routedintLivFC'
+netcdf_short_name[pcrglobwb_variable_name] = 'routedintLivFC'
+netcdf_unit[pcrglobwb_variable_name]       = 'million_cfu'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'routed_intLivFC_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'Intensive Livestock FC loadings routed through surface water network'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# routed Extensive Livestock FC loads
+pcrglobwb_variable_name = 'routedextLivFC'
+netcdf_short_name[pcrglobwb_variable_name] = 'routedextLivFC'
+netcdf_unit[pcrglobwb_variable_name]       = 'million_cfu'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'routed_extLivFC_loadings'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'Extensive Livestock FC loadings routed through surface water network'
 latex_symbol[pcrglobwb_variable_name]      = None
 
 # Salinity pollution (concentration in TDS mg.l)

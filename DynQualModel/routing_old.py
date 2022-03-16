@@ -332,12 +332,11 @@ class Routing(object):
         
         try:
           self.quality = iniItems.routingOptions['quality'] == "True"
-          logger.info("Water quality modelling initiated.")
-        
+          logger.info("Quality started")
         except:
           self.quality = False
-          logger.info("Water quality modelling not initiated.")
-
+        if self.method == "accuTravelTime" or "kinematicWave": self.quality = False
+        self.quality = True
         print("waterTemperature =",self.quality)
         print("Salinity = ", self.quality)
         print("Organic = ", self.quality)
@@ -371,7 +370,7 @@ class Routing(object):
             self.deltaIceThickness = 0.0
             
             #- Path to powerplant data
-            self.PowRFNC = vos.getFullPath(iniItems.routingOptions["powerplantNC"], self.inputDir) #Power return flows (m3 day) at 5arc-min (Lohrmann et al., 2019)             
+            self.PowRFNC = vos.getFullPath(iniItems.routingOptions["powerplantNC"], self.inputDir) #Power return flows aggregated to 5arc-min (Lohrmann et al., 2019)             
             
             #- Background TDS concentration (mg l-1)
             self.backgroundSalinityNC = vos.getFullPath(iniItems.routingOptions['backgroundSalinity'], self.inputDir)
@@ -380,42 +379,38 @@ class Routing(object):
             #- Path to TSS loadings (from Beusen et al., 2005)
             self.tss = vos.readPCRmapClone(iniItems.routingOptions['TSSmap'],self.cloneMap,self.tmpDir,self.inputDir)
             
-            #- Options required for offline runs
+            #- Additional options
+            # For offline runs
             if iniItems.routingOptions['offlineRun'] == "True":
                 self.offlineRun = True
-                logger.info("DynQual running in offline configuration")
-                
-                #Baseflow, interflow and direct runoff required for offline DynQual runs.
                 self.baseflowNC = vos.getFullPath(iniItems.routingOptions['baseflowNC'], self.inputDir)
                 self.interflowNC = vos.getFullPath(iniItems.routingOptions['interflowNC'], self.inputDir)
                 self.directRunoffNC = vos.getFullPath(iniItems.routingOptions['directRunoffNC'], self.inputDir)
-                
                 try: 
                     self.hydrology_set_per_year = iniItems.routingOptions['hydrology_set_per_year'] == "True"
-                    logger.info("Individual NetCDF files are provided per year.")
                 except:
                     self.hydrology_set_per_year = False
-                    
-                if iniItems.routingOptions['calculateLoads'] == "True":
-                    logger.info("WARNING: Cannot calculate pollutant loadings in offline configuration.")
-                    logger.info("Switch to online configuration or prescribe loadings directly.")
+                logger.info("DynQual running offline")
             
             else:
                 self.offlineRun = False
                 logger.info("DynQual running online")
              
             # For calculating loadings within model runs   
-            if iniItems.routingOptions['calculateLoads'] == "True" and self.offlineRun == False:
+            if iniItems.routingOptions['calculateLoads'] == "True":
                 self.calculateLoads = True
-                logger.info("Loadings calculated within model run.")
+                logger.info("Loadings calculated within model run")
                 
                 if iniItems.routingOptions['loadsPerSector'] == "True":
                     self.loadsPerSector = True
                     logger.info("Option to report loads per sector enabled")
                 
+                if self.offlineRun:
+                    self.avg_irrGrossDemandNC = vos.getFullPath(iniItems.routingOptions['avg_irrGrossDemandNC'], self.inputDir)
+                    self.avg_netLqWaterToSoilNC = vos.getFullPath(iniItems.routingOptions['avg_netLqWaterToSoilNC'], self.inputDir)
+                
             else:
                 self.calculateLoads = False
-                self.loadsPerSector = False
                 logger.info("Loadings are prescribed (i.e. akin to a forcing) to the model")
             
             if self.calculateLoads:
@@ -430,7 +425,7 @@ class Routing(object):
                 self.DomFC_ExcrLoad = vos.netcdf2PCRobjCloneWithoutTime(self.Dom_ExcrLoadNC,"Dom_Fixed_FCload",self.cloneMap)   # cfu/capita/day
                 
                 #Manufacturing
-                self.factorInd_ManNC = vos.getFullPath(iniItems.routingOptions["factorInd_ManNC"], self.inputDir) #factor to converting industrial rf to man wastewater (-)
+                self.ManWWpNC = vos.getFullPath(iniItems.routingOptions["ManWWpNC"], self.inputDir) #manufacturing return flows, m3 day, 5 arc-min
                 self.Man_EfflConcNC = vos.getFullPath(iniItems.routingOptions["Man_EfflConcNC"], self.inputDir) #average (regional) man effluent concentrations:
                 self.ManTDS_EfflConc = vos.netcdf2PCRobjCloneWithoutTime(self.Man_EfflConcNC,"Man_Fixed_TDSload",self.cloneMap) # mg/L [i.e. g/m3]
                 self.ManBOD_EfflConc = vos.netcdf2PCRobjCloneWithoutTime(self.Man_EfflConcNC,"Man_Fixed_BODload",self.cloneMap) # mg/L [i.e. g/m3] 
@@ -464,7 +459,7 @@ class Routing(object):
                 self.Sheep_FCload = vos.netcdf2PCRobjCloneWithoutTime(self.Liv_ExcrLoadNC,"Sheep_FCload",self.cloneMap) # cfu/stock/day    
                 
                 #Irrigation
-                self.Irr_EfflConcNC = vos.getFullPath(iniItems.routingOptions["Irr_EfflConcNC"], self.inputDir) #average soil concentration averaged over the topsoil and subsoil 
+                self.Irr_EfflConcNC = vos.getFullPath(iniItems.routingOptions["Irr_EfflConcNC"], self.inputDir) #average soil concentration averaged over the topsoil and subsoil: 
                 self.IrrTDS_EfflConc = vos.netcdf2PCRobjCloneWithoutTime(self.Irr_EfflConcNC,"soil_TDS",self.cloneMap) # mg/L
                                                     
                 #Wastewater pathways and removal efficiencies (treatment [tertiary, secondary, primary], collected but untreated, basic sanitation, open defecation, direct)
@@ -503,14 +498,14 @@ class Routing(object):
         # get the initialConditions
         self.getICs(iniItems, initialConditions)
         
-        # initiate old style reporting
+        # initiate old style reporting                                  # TODO: remove this!
         self.initiate_old_style_routing_reporting(iniItems)
         
 
     def getICs(self,iniItems,iniConditions = None):
 
         if iniConditions == None:
-            logger.info("Reading initial conditions from pcraster maps listed in the .ini file")
+
             # read initial conditions from pcraster maps listed in the ini file (for the first time step of the model; when the model just starts)
             self.timestepsToAvgDischarge = vos.readPCRmapClone(iniItems.routingOptions['timestepsToAvgDischargeIni'] ,self.cloneMap,self.tmpDir,self.inputDir)  
             self.channelStorage          = vos.readPCRmapClone(iniItems.routingOptions['channelStorageIni']          ,self.cloneMap,self.tmpDir,self.inputDir)
@@ -519,7 +514,11 @@ class Routing(object):
             self.m2tDischarge            = vos.readPCRmapClone(iniItems.routingOptions['m2tDischargeLongIni']        ,self.cloneMap,self.tmpDir,self.inputDir) 
             self.avgBaseflow             = vos.readPCRmapClone(iniItems.routingOptions['avgBaseflowLongIni']         ,self.cloneMap,self.tmpDir,self.inputDir) 
             self.riverbedExchange        = vos.readPCRmapClone(iniItems.routingOptions['riverbedExchangeIni']        ,self.cloneMap,self.tmpDir,self.inputDir) 
+            
+            # New initial condition variable introduced in the version 2.0.2: avgDischargeShort 
             self.avgDischargeShort       = vos.readPCRmapClone(iniItems.routingOptions['avgDischargeShortIni']       ,self.cloneMap,self.tmpDir,self.inputDir) 
+
+            # Initial conditions needed for kinematic wave methods
             self.subDischarge            = vos.readPCRmapClone(iniItems.routingOptions['subDischargeIni'],self.cloneMap,self.tmpDir,self.inputDir)
 
             # Initial conditions needed for water quality module
@@ -530,30 +529,31 @@ class Routing(object):
                 self.routedBOD = vos.readPCRmapClone(iniItems.routingOptions['routedBODIni'],self.cloneMap,self.tmpDir,self.inputDir) #initial conditions for organic pollution
                 self.routedFC = vos.readPCRmapClone(iniItems.routingOptions['routedFCIni'],self.cloneMap,self.tmpDir,self.inputDir) #initial conditions for pathogen pollution
                 
-                # Initial conditions for calculating average irrigation demand and net liquid transferred to the soil for irrigation return flow calculations
-                if self.calculateLoads and self.offlineRun == False:
+                #Per water quality sector
+                if self.loadsPerSector:
+                    logger.info("Reading initial conditions from file: routed loadings per sector")
+                    self.routedDomTDS = vos.readPCRmapClone(iniItems.routingOptions['routedDomTDSIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                    self.routedDomBOD = vos.readPCRmapClone(iniItems.routingOptions['routedDomBODIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                    self.routedDomFC = vos.readPCRmapClone(iniItems.routingOptions['routedDomFCIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                    self.routedManTDS = vos.readPCRmapClone(iniItems.routingOptions['routedManTDSIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                    self.routedManBOD = vos.readPCRmapClone(iniItems.routingOptions['routedManBODIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                    self.routedManFC = vos.readPCRmapClone(iniItems.routingOptions['routedManFCIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                    self.routedUSRTDS = vos.readPCRmapClone(iniItems.routingOptions['routedUSRTDSIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                    self.routedUSRBOD = vos.readPCRmapClone(iniItems.routingOptions['routedUSRBODIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                    self.routedUSRFC = vos.readPCRmapClone(iniItems.routingOptions['routedUSRFCIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                    self.routedintLivBOD = vos.readPCRmapClone(iniItems.routingOptions['routedintLivBODIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                    self.routedintLivFC = vos.readPCRmapClone(iniItems.routingOptions['routedintLivFCIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                    self.routedextLivBOD = vos.readPCRmapClone(iniItems.routingOptions['routedextLivBODIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                    self.routedextLivFC = vos.readPCRmapClone(iniItems.routingOptions['routedextLivFCIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                    self.routedIrrTDS = vos.readPCRmapClone(iniItems.routingOptions['routedIrrTDSIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                
+            # Initial conditions for calculating average irrigation demand and net liquid transferred to the soil for irrigation return flow calculations
+                if self.calculateLoads:
                     self.avg_irrGrossDemand   = vos.readPCRmapClone(iniItems.routingOptions['avg_irrGrossDemandIni'],self.cloneMap,self.tmpDir,self.inputDir)      
-                    self.avg_netLqWaterToSoil = vos.readPCRmapClone(iniItems.routingOptions['avg_netLqWaterToSoilIni'], self.cloneMap,self.tmpDir,self.inputDir)
-                    
-                    # Per water quality sector
-                    if self.loadsPerSector:
-                        self.routedDomTDS = vos.readPCRmapClone(iniItems.routingOptions['routedDomTDSIni'],self.cloneMap,self.tmpDir,self.inputDir)
-                        self.routedDomBOD = vos.readPCRmapClone(iniItems.routingOptions['routedDomBODIni'],self.cloneMap,self.tmpDir,self.inputDir)
-                        self.routedDomFC = vos.readPCRmapClone(iniItems.routingOptions['routedDomFCIni'],self.cloneMap,self.tmpDir,self.inputDir)
-                        self.routedManTDS = vos.readPCRmapClone(iniItems.routingOptions['routedManTDSIni'],self.cloneMap,self.tmpDir,self.inputDir)
-                        self.routedManBOD = vos.readPCRmapClone(iniItems.routingOptions['routedManBODIni'],self.cloneMap,self.tmpDir,self.inputDir)
-                        self.routedManFC = vos.readPCRmapClone(iniItems.routingOptions['routedManFCIni'],self.cloneMap,self.tmpDir,self.inputDir)
-                        self.routedUSRTDS = vos.readPCRmapClone(iniItems.routingOptions['routedUSRTDSIni'],self.cloneMap,self.tmpDir,self.inputDir)
-                        self.routedUSRBOD = vos.readPCRmapClone(iniItems.routingOptions['routedUSRBODIni'],self.cloneMap,self.tmpDir,self.inputDir)
-                        self.routedUSRFC = vos.readPCRmapClone(iniItems.routingOptions['routedUSRFCIni'],self.cloneMap,self.tmpDir,self.inputDir)
-                        self.routedintLivBOD = vos.readPCRmapClone(iniItems.routingOptions['routedintLivBODIni'],self.cloneMap,self.tmpDir,self.inputDir)
-                        self.routedintLivFC = vos.readPCRmapClone(iniItems.routingOptions['routedintLivFCIni'],self.cloneMap,self.tmpDir,self.inputDir)
-                        self.routedextLivBOD = vos.readPCRmapClone(iniItems.routingOptions['routedextLivBODIni'],self.cloneMap,self.tmpDir,self.inputDir)
-                        self.routedextLivFC = vos.readPCRmapClone(iniItems.routingOptions['routedextLivFCIni'],self.cloneMap,self.tmpDir,self.inputDir)
-                        self.routedIrrTDS = vos.readPCRmapClone(iniItems.routingOptions['routedIrrTDSIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                    self.avg_netLqWaterToSoil = vos.readPCRmapClone(iniItems.routingOptions['avg_netLqWaterToSoilIni'], self.cloneMap,self.tmpDir,self.inputDir) 
 
         else:              
-            logger.info("Reading initial conditions from memory.")
+
             # read initial conditions from the memory
             self.timestepsToAvgDischarge = iniConditions['routing']['timestepsToAvgDischarge']                                                      
             self.channelStorage          = iniConditions['routing']['channelStorage']
@@ -565,7 +565,6 @@ class Routing(object):
             self.avgDischargeShort       = iniConditions['routing']['avgDischargeShort']
             self.subDischarge            = iniConditions['routing']['subDischarge']
 
-            # Initial conditions needed for water quality module
             if self.quality:
                 self.waterTemp               = iniConditions['routing']['waterTemperature']
                 self.iceThickness            = iniConditions['routing']['iceThickness']
@@ -573,30 +572,28 @@ class Routing(object):
                 self.routedBOD               = iniConditions['routing']['routedBOD']
                 self.routedFC                = iniConditions['routing']['routedFC']
                 
-                # Initial conditions for calculating average irrigation demand and net liquid transferred to the soil for irrigation return flow calculations                
-                if self.calculateLoads and self.offlineRun == False:    
+                #Per water quality sector
+                if self.loadsPerSector:
+                    logger.info("Reading initial conditions from memory: routed loadings per sector")
+                    self.routedDomTDS = iniConditions['routing']['routedDomTDS']
+                    self.routedDomBOD = iniConditions['routing']['routedDomBOD']
+                    self.routedDomFC = iniConditions['routing']['routedDomFC']
+                    self.routedManTDS = iniConditions['routing']['routedManTDS']
+                    self.routedManBOD = iniConditions['routing']['routedManBOD'] 
+                    self.routedManFC = iniConditions['routing']['routedManFC']
+                    self.routedUSRTDS = iniConditions['routing']['routedUSRTDS']
+                    self.routedUSRBOD = iniConditions['routing']['routedUSRBOD']
+                    self.routedUSRFC =  iniConditions['routing']['routedUSRFC']
+                    self.routedintLivBOD = iniConditions['routing']['routedintLivBOD']
+                    self.routedintLivFC = iniConditions['routing']['routedintLivFC']
+                    self.routedextLivBOD = iniConditions['routing']['routedextLivBOD']
+                    self.routedextLivFC = iniConditions['routing']['routedextLivFC']
+                    self.routedIrrTDS = iniConditions['routing']['routedIrrTDS']
+                
+                if self.calculateLoads:    
                     self.avg_irrGrossDemand   = iniConditions['routing']['avg_irrGrossDemand']      
                     self.avg_netLqWaterToSoil = iniConditions['routing']['avg_netLqWaterToSoil']
-                    
-                    #Per water quality sector
-                    if self.loadsPerSector:
-                        self.routedDomTDS = iniConditions['routing']['routedDomTDS']
-                        self.routedDomBOD = iniConditions['routing']['routedDomBOD']
-                        self.routedDomFC = iniConditions['routing']['routedDomFC']
-                        self.routedManTDS = iniConditions['routing']['routedManTDS']
-                        self.routedManBOD = iniConditions['routing']['routedManBOD'] 
-                        self.routedManFC = iniConditions['routing']['routedManFC']
-                        self.routedUSRTDS = iniConditions['routing']['routedUSRTDS']
-                        self.routedUSRBOD = iniConditions['routing']['routedUSRBOD']
-                        self.routedUSRFC =  iniConditions['routing']['routedUSRFC']
-                        self.routedintLivBOD = iniConditions['routing']['routedintLivBOD']
-                        self.routedintLivFC = iniConditions['routing']['routedintLivFC']
-                        self.routedextLivBOD = iniConditions['routing']['routedextLivBOD']
-                        self.routedextLivFC = iniConditions['routing']['routedextLivFC']
-                        self.routedIrrTDS = iniConditions['routing']['routedIrrTDS']
 
-
-        # Get values associated with landmask
         self.channelStorage        = pcr.ifthen(self.landmask, pcr.cover(self.channelStorage, 0.0))
         self.readAvlChannelStorage = pcr.ifthen(self.landmask, pcr.cover(self.readAvlChannelStorage, 0.0))
         self.avgDischarge          = pcr.ifthen(self.landmask, pcr.cover(self.avgDischarge, 0.0))
@@ -604,9 +601,11 @@ class Routing(object):
         self.avgDischargeShort     = pcr.ifthen(self.landmask, pcr.cover(self.avgDischargeShort, 0.0))
         self.avgBaseflow           = pcr.ifthen(self.landmask, pcr.cover(self.avgBaseflow, 0.0))
         self.riverbedExchange      = pcr.ifthen(self.landmask, pcr.cover(self.riverbedExchange, 0.0))
-        self.subDischarge          = pcr.ifthen(self.landmask, pcr.cover(self.subDischarge , 0.0))        
-        self.readAvlChannelStorage = pcr.max(pcr.min(self.readAvlChannelStorage, self.channelStorage),0.0)
-
+        self.subDischarge          = pcr.ifthen(self.landmask, pcr.cover(self.subDischarge , 0.0))
+        
+        self.readAvlChannelStorage = pcr.min(self.readAvlChannelStorage, self.channelStorage)
+        self.readAvlChannelStorage = pcr.max(self.readAvlChannelStorage, 0.0)
+        
         if self.floodPlain:
             self.subDischarge          = pcr.ifthen(self.landmask, pcr.cover(self.subDischarge , 0.0))
 
@@ -621,25 +620,26 @@ class Routing(object):
             self.routedFC = pcr.ifthen(self.landmask, pcr.cover(self.routedFC,  0.0))
             
             #Per water quality sector
-            if self.calculateLoads and self.offlineRun == False:  
+            
+            if self.loadsPerSector:          
+                self.routedDomTDS = pcr.ifthen(self.landmask, pcr.cover(self.routedDomTDS, 0.0))
+                self.routedDomBOD = pcr.ifthen(self.landmask, pcr.cover(self.routedDomBOD, 0.0))
+                self.routedDomFC = pcr.ifthen(self.landmask, pcr.cover(self.routedDomFC, 0.0))
+                self.routedManTDS = pcr.ifthen(self.landmask, pcr.cover(self.routedManTDS, 0.0))
+                self.routedManBOD = pcr.ifthen(self.landmask, pcr.cover(self.routedManBOD, 0.0))
+                self.routedManFC = pcr.ifthen(self.landmask, pcr.cover(self.routedManFC, 0.0))
+                self.routedUSRTDS = pcr.ifthen(self.landmask, pcr.cover(self.routedUSRTDS, 0.0))
+                self.routedUSRBOD = pcr.ifthen(self.landmask, pcr.cover(self.routedUSRBOD, 0.0))
+                self.routedUSRFC = pcr.ifthen(self.landmask, pcr.cover(self.routedUSRFC, 0.0))
+                self.routedintLivBOD = pcr.ifthen(self.landmask, pcr.cover(self.routedintLivBOD, 0.0))
+                self.routedintLivFC = pcr.ifthen(self.landmask, pcr.cover(self.routedintLivFC, 0.0))
+                self.routedextLivBOD = pcr.ifthen(self.landmask, pcr.cover(self.routedextLivBOD, 0.0))
+                self.routedextLivFC = pcr.ifthen(self.landmask, pcr.cover(self.routedextLivFC, 0.0))
+                self.routedIrrTDS = pcr.ifthen(self.landmask, pcr.cover(self.routedIrrTDS, 0.0))
+            
+            if self.calculateLoads:  
                 self.avg_irrGrossDemand   = pcr.ifthen(self.landmask, pcr.cover(self.avg_irrGrossDemand,   0.0))
                 self.avg_netLqWaterToSoil = pcr.ifthen(self.landmask, pcr.cover(self.avg_netLqWaterToSoil, 0.0))
-                
-                if self.loadsPerSector:          
-                    self.routedDomTDS = pcr.ifthen(self.landmask, pcr.cover(self.routedDomTDS, 0.0))
-                    self.routedDomBOD = pcr.ifthen(self.landmask, pcr.cover(self.routedDomBOD, 0.0))
-                    self.routedDomFC = pcr.ifthen(self.landmask, pcr.cover(self.routedDomFC, 0.0))
-                    self.routedManTDS = pcr.ifthen(self.landmask, pcr.cover(self.routedManTDS, 0.0))
-                    self.routedManBOD = pcr.ifthen(self.landmask, pcr.cover(self.routedManBOD, 0.0))
-                    self.routedManFC = pcr.ifthen(self.landmask, pcr.cover(self.routedManFC, 0.0))
-                    self.routedUSRTDS = pcr.ifthen(self.landmask, pcr.cover(self.routedUSRTDS, 0.0))
-                    self.routedUSRBOD = pcr.ifthen(self.landmask, pcr.cover(self.routedUSRBOD, 0.0))
-                    self.routedUSRFC = pcr.ifthen(self.landmask, pcr.cover(self.routedUSRFC, 0.0))
-                    self.routedintLivBOD = pcr.ifthen(self.landmask, pcr.cover(self.routedintLivBOD, 0.0))
-                    self.routedintLivFC = pcr.ifthen(self.landmask, pcr.cover(self.routedintLivFC, 0.0))
-                    self.routedextLivBOD = pcr.ifthen(self.landmask, pcr.cover(self.routedextLivBOD, 0.0))
-                    self.routedextLivFC = pcr.ifthen(self.landmask, pcr.cover(self.routedextLivFC, 0.0))
-                    self.routedIrrTDS = pcr.ifthen(self.landmask, pcr.cover(self.routedIrrTDS, 0.0))
         
         # make sure that timestepsToAvgDischarge is consistent (or the same) for the entire map:
         try:
@@ -828,7 +828,7 @@ class Routing(object):
 
         ##########################################################################################################################
 
-        logger.info("Using the simplifiedKinematicWave method!")
+        logger.info("Using the simplifiedKinematicWave method ! ")
         
         # route only non negative channelStorage (otherwise stay):
         self.channelStorage = self.channelStorage
@@ -906,7 +906,7 @@ class Routing(object):
 
     def update(self,landSurface,groundwater,currTimeStep,meteo):
 
-        logger.info("Routing in progress (one-way coupling with PCR-GLOBWB2)")
+        logger.info("routing in progress")
 
         # waterBodies: 
         # - get parameters at the beginning of each year or simulation
@@ -984,7 +984,7 @@ class Routing(object):
         
     def update_routing_only(self,currTimeStep,meteo):
         
-        logger.info("Routing in progress (offline configuration)")
+        logger.info("routing (only) in progress")
 
         # waterBodies: 
         # - get parameters at the beginning of each year or simulation
@@ -1036,6 +1036,13 @@ class Routing(object):
         #
         if self.method == "kinematicWave": \
            self.kinematic_wave_update(currTimeStep,meteo)                 
+        # NOTE that this method require abstraction from fossil groundwater.
+        
+        # infiltration from surface water bodies (rivers/channels, as well as lakes and/or reservoirs) to groundwater bodies
+        # - this exchange fluxes will be handed in the next time step
+        # - in the future, this will be the interface between PCR-GLOBWB & MODFLOW (based on the difference between surface water levels & groundwater heads)
+        #
+        #self.calculate_exchange_to_groundwater(groundwater,currTimeStep) 
 
         # volume water released in pits (losses: to the ocean / endorheic basin)
         self.outgoing_volume_at_pits = pcr.ifthen(self.landmask,
@@ -1046,7 +1053,7 @@ class Routing(object):
         self.readAvlChannelStorage = self.estimate_available_volume_for_abstraction(self.channelStorage)
                 
         # old-style reporting                             
-        self.old_style_routing_reporting(currTimeStep)
+        self.old_style_routing_reporting(currTimeStep)                 # TODO: remove this one
 
     def calculate_potential_evaporation(self,landSurface,currTimeStep,meteo):
 
@@ -1091,7 +1098,8 @@ class Routing(object):
         # potential evaporation from water bodies (m/day)) - reduced by evaporation that has been calculated in the landSurface module
         waterBodyPotEvapOvesSurfaceWaterArea = pcr.ifthen(self.landmask, \
                                                pcr.max(0.0,\
-                                               self.waterKC * meteo.referencePotET))  # These values are NOT over the entire cell area.
+                                               self.waterKC * meteo.referencePotET)) ##TODO -\
+        ## TODO check                                       landSurface.actualET ))              # These values are NOT over the entire cell area.
         
         # potential evaporation from water bodies over the entire cell area (m/day)
         waterBodyPotEvap = waterBodyPotEvapOvesSurfaceWaterArea * self.dynamicFracWat
@@ -1179,6 +1187,7 @@ class Routing(object):
         # - limited to available channelStorage
         # - this infiltration will be handed to groundwater in the next time step
         # - References: de Graaf et al. (2014); Wada et al. (2012); Wada et al. (2010)
+        # - TODO: This concept should be IMPROVED. 
         #
         riverbedConductivity  = groundwater.kSatAquifer # unit: m/day
         total_groundwater_abstraction = pcr.max(0.0, groundwater.nonFossilGroundwaterAbs + groundwater.unmetDemand)   # unit: m
@@ -1348,26 +1357,18 @@ class Routing(object):
 
         # reporting channelStorage after surface water abstraction (unit: m3)
         self.channelStorageAfterAbstraction = pcr.ifthen(self.landmask, self.channelStorage) 
-        
-        # return flow from domestic water demand (m day-1)
-        self.DomesticReturnFlow = landSurface.domesticGrossDemand * landSurface.DomReturnFlowFraction 
-        self.DomesticReturnFlowVol = self.DomesticReturnFlow * self.cellArea #in m3 day (assuming all demands are met.)
-        
-        # return flow from industry water demands (m day-1)
-        self.IndustryReturnFlow = landSurface.industryGrossDemand * landSurface.IndReturnFlowFraction
-        self.IndustryReturnFlowVol = self.IndustryReturnFlow * self.cellArea #in m3 day (assuming all demands are met.)
-        
+
         # return flow from (m) non irrigation water demand
-        self.nonIrrReturnFlow = landSurface.nonIrrReturnFlowFraction * landSurface.potentialNonIrrGrossWaterDemand
+        self.nonIrrReturnFlow = landSurface.nonIrrReturnFlowFraction*\
+                                landSurface.nonIrrGrossDemand          # m
         nonIrrReturnFlowVol   = self.nonIrrReturnFlow*self.cellArea
         self.channelStorage  += nonIrrReturnFlowVol
         self.local_input_to_surface_water += nonIrrReturnFlowVol
-        
-        # water consumption for non irrigation water demand (m) - this water is removed from the water balance
-        self.nonIrrWaterConsumption = pcr.max(0.0,\
-                                      landSurface.potentialNonIrrGrossWaterDemand - \
-                                      self.nonIrrReturnFlow)
 
+        # water consumption for non irrigation water demand (m) - this water is removed from the water balance
+        self.nonIrrWaterConsumption = landSurface.nonIrrGrossDemand - \
+                                      self.nonIrrReturnFlow
+        # 
         # Note that in case of limitAbstraction = True ; landSurface.nonIrrGrossDemand has been reduced by available water                               
         
         # calculate evaporation from water bodies - this will return self.waterBodyEvaporation (unit: m)
@@ -1381,7 +1382,7 @@ class Routing(object):
                                  [  self.channelStorage/self.cellArea],\
                                    'channelStorage (unit: m) before lake/reservoir outflow',\
                                   True,\
-                                  currTimeStep.fulldate,threshold=5e-3)
+                                  currTimeStep.fulldate,threshold=1e-4)
         
         # LAKE AND RESERVOIR OPERATIONS
         ##########################################################################################################################
@@ -1410,7 +1411,7 @@ class Routing(object):
                                 self.downstreamDemand)
 
         # waterBodyStorage (m3) after outflow:                               # values given are per water body id (not per cell)
-        self.waterBodyStorage = pcr.ifthen(self.landmask,self.WaterBodies.waterBodyStorage)
+        self.waterBodyStorage = self.WaterBodies.waterBodyStorage
         
         if self.quality:    
             self.waterBodyStorageTimeBefore = self.waterBodyStorage + self.WaterBodies.waterBodyOutflow
@@ -1456,10 +1457,11 @@ class Routing(object):
             
                 if self.calculateLoads:
                     self.readPollutantLoadingsInputData(currTimeStep)
-                    self.calculatePollutantLoadings(currTimeStep,landSurface,groundwater)
                 else:
                     self.readPollutantLoadings(currTimeStep)    
             
+            if self.calculateLoads:
+                self.calculatePollutantLoadings(currTimeStep,landSurface,groundwater)
             self.channelStorageTimeBefore = pcr.max(0.0, self.channelStorage)
             self.energyLocal(meteo, landSurface, groundwater)
             self.energyWaterBody()
@@ -1508,7 +1510,7 @@ class Routing(object):
 
         if self.offlineRun:
             if currTimeStep.day == 1:
-                logger.info("Reading extensive hydrology: total runoff = baseflow + interflow + surface runoff")
+                logger.info("reading extensive hydrology")
                 self.readExtensiveHydro(currTimeStep)
 
         # updating timesteps to calculate long and short term statistics values of avgDischarge, avgInflow, avgOutflow, etc.
@@ -1520,6 +1522,9 @@ class Routing(object):
         # the following variable defines total local change (input) to surface water storage bodies # unit: m3 
         # - only local processes; therefore not considering any routing processes
         self.local_input_to_surface_water = pcr.scalar(0.0)          # initiate the variable, start from zero
+
+        # runoff from landSurface cells (unit: m/day)
+        #self.runoff = self.directRunoff + self.interflow + self.baseflow   
         
         # update channelStorage (unit: m3) after runoff
         self.channelStorage += self.runoff * self.cellArea
@@ -1610,8 +1615,14 @@ class Routing(object):
             if currTimeStep.day == 1 or currTimeStep.timeStepPCR == 1:
                 self.readExtensiveMeteo(currTimeStep)
                 self.readPowerplantData(currTimeStep)
-                self.readPollutantLoadings(currTimeStep)
-
+                
+                if self.calculateLoads:
+                    self.readPollutantLoadingsInputData(currTimeStep)       
+                else:
+                    self.readPollutantLoadings(currTimeStep)
+            
+            if self.calculateLoads:
+                self.calculatePollutantLoadings(currTimeStep)            
             self.channelStorageTimeBefore = pcr.max(0.0, self.channelStorage)
             self.energyLocal_routing_only(meteo)
             self.energyWaterBody()
@@ -1829,7 +1840,7 @@ class Routing(object):
             ###########################################
 
             if landSurface.limitAbstraction == True and\
-              (landSurface.includeIrrigation or landSurface.domesticWaterDemandOption or landSurface.industryWaterDemandOption):
+              (landSurface.includeIrrigation or landSurface.domesticWaterDemandOption or landSurface.industrycWaterDemandOption):
         
                 msg  = "\n"
                 msg += "\n"
@@ -1857,7 +1868,7 @@ class Routing(object):
                 water_body_allocation_volume  = water_body_abstraction_volume
             #
             if landSurface.usingAllocSegments == True and landSurface.limitAbstraction == False and \
-              (landSurface.includeIrrigation or landSurface.domesticWaterDemandOption or landSurface.industryWaterDemandOption):
+              (landSurface.includeIrrigation or landSurface.domesticWaterDemandOption or landSurface.industrycWaterDemandOption):
 
                 logger.info("Using surface water allocation.")
 
@@ -2119,20 +2130,38 @@ class Routing(object):
 
 
         # average irrigation water that is allocated from the last 30 days (needed for online runs where loadings are calculated in loop)
-        if self.calculateLoads == "True" and self.offlineRun == False: 
-            # calculate average irrigation gross demands from the last 30 days       
-            deltaAno_irrGrossDemand = pcr.max(0.0, landSurface.irrGrossDemand) - self.avg_irrGrossDemand  
-            self.avg_irrGrossDemand = self.avg_irrGrossDemand +\
-                                      deltaAno_irrGrossDemand/\
-                                      pcr.min(30.0, self.timestepsToAvgDischarge)
-            self.avg_irrGrossDemand = pcr.max(0.0, self.avg_irrGrossDemand)                         
+        if self.calculateLoads: 
         
-            # average netLqWaterToSoil from the last 30 days
-            deltaAno_netLqWaterToSoil = pcr.max(0.0, landSurface.netLqWaterToSoil) - self.avg_netLqWaterToSoil  
-            self.avg_netLqWaterToSoil = self.avg_netLqWaterToSoil +\
-                                      deltaAno_netLqWaterToSoil/\
-                                      pcr.min(30.0, self.timestepsToAvgDischarge)
-            self.avg_netLqWaterToSoil = pcr.max(0.0, self.avg_netLqWaterToSoil)                         
+            if self.offlineRun:
+                # read in average monthly irrigation gross demands
+                self.avg_irrGrossDemand = vos.netcdf2PCRobjClone(\
+                                                                self.avg_irrGrossDemandNC,"irrigation_gross_demand",\
+                                                                str(currTimeStep.fulldate),
+                                                                useDoy = 'month',
+                                                                cloneMapFileName=self.cloneMap,\
+                                                                LatitudeLongitude = True)
+                # read in average monthly netLqWaterToSoil                                                           
+                self.avg_netLqWaterToSoil = vos.netcdf2PCRobjClone(\
+                                                                self.avg_netLqWaterToSoilNC,"netLqWaterToSoil_at_irrigation",\
+                                                                str(currTimeStep.fulldate),
+                                                                useDoy = 'month',
+                                                                cloneMapFileName=self.cloneMap,\
+                                                                LatitudeLongitude = True)
+            
+            else:
+                # calculate average irrigation gross demands from the last 30 days       
+                deltaAno_irrGrossDemand = pcr.max(0.0, landSurface.irrGrossDemand) - self.avg_irrGrossDemand  
+                self.avg_irrGrossDemand = self.avg_irrGrossDemand +\
+                                          deltaAno_irrGrossDemand/\
+                                          pcr.min(30.0, self.timestepsToAvgDischarge)
+                self.avg_irrGrossDemand = pcr.max(0.0, self.avg_irrGrossDemand)                         
+            
+                # average netLqWaterToSoil from the last 30 days
+                deltaAno_netLqWaterToSoil = pcr.max(0.0, landSurface.netLqWaterToSoil) - self.avg_netLqWaterToSoil  
+                self.avg_netLqWaterToSoil = self.avg_netLqWaterToSoil +\
+                                          deltaAno_netLqWaterToSoil/\
+                                          pcr.min(30.0, self.timestepsToAvgDischarge)
+                self.avg_netLqWaterToSoil = pcr.max(0.0, self.avg_netLqWaterToSoil)                         
 
 
     def estimate_discharge_for_environmental_flow(self, channelStorage):
@@ -2584,7 +2613,20 @@ class Routing(object):
                                   LatitudeLongitude = True,specificFillValue = None) #input pathway for gridded population file (5 arc-mins)    
         
         #Manufacturing
-        self.factorInd_Man = vos.netcdf2PCRobjCloneWithoutTime(self.factorInd_ManNC,"factorInd_Man",self.cloneMap) #factor for converting ind return flow to man wastewater (-)
+        if self.offlineRun:
+            self.ManWWp = vos.netcdf2PCRobjClone(\
+                                     self.ManWWpNC,'man_WWp',\
+                                     str(currTimeStep.fulldate), 
+                                     useDoy = None,
+                                      cloneMapFileName=self.cloneMap,\
+                                      LatitudeLongitude = True,specificFillValue = None) # input pathway for manufacturing return flows (m3 day)
+        else:
+            self.factorInd_Man = vos.netcdf2PCRobjClone(\
+                                             self.factorInd_ManNC,'factorInd_Man',\
+                                             str(currTimeStep.fulldate), 
+                                             useDoy = None,
+                                             cloneMapFileName=self.cloneMap,\
+                                             LatitudeLongitude = True,specificFillValue = None) #factor for converting industrial return flow to manufacturing wastewater (-)
                                       
         #Urban surface runoff
         self.urban_area_fraction = vos.netcdf2PCRobjClone(\
@@ -2721,7 +2763,7 @@ class Routing(object):
                                   LatitudeLongitude = True,specificFillValue = None) #fraction of manufacturing wastewater directly discharged (5 arc-min)
         self.ratio_man_WWdirect = pcr.cover(self.ratio_man_WWdirect,0)
 
-    def calculatePollutantLoadings(self, currTimeStep, landSurface, groundwater):
+    def calculatePollutantLoadings(self, currTimeStep, landSurface = None, groundwater = None):
         #calculate pollutant loadings directly
         logger.info("Calculating pollutant loadings")
         
@@ -2739,8 +2781,11 @@ class Routing(object):
                      (self.ratio_WWt_Primary * self.FC_Pri_RemEff) +\
                      (self.ratio_WWcut * self.FC_WWcut_RemEff)
         
-        #- Fraction of direct runoff directly from PCR-GLOBWB (direct runoff / total runoff)           
-        self.frac_surfaceRunoff = vos.getValDivZero(landSurface.directRunoff, (landSurface.landSurfaceRunoff + groundwater.baseflow))
+        #- Fraction of direct runoff directly from PCR-GLOBWB (direct runoff / total runoff)    
+        if self.offlineRun:        
+            self.frac_surfaceRunoff = vos.getValDivZero(self.directRunoff, self.runoff)
+        else:            
+            self.frac_surfaceRunoff = vos.getValDivZero(landSurface.directRunoff, (landSurface.landSurfaceRunoff + groundwater.baseflow))
         
         #Domestic sector-specific wastewater pathways        
         TDS_Rem_BasicSan = self.ratio_dom_WWbs * self.TDS_dom_WWbs_RemEff     #Removal of TDS due to basic sanitation practices
@@ -2754,13 +2799,15 @@ class Routing(object):
         self.Dom_FCload = (self.Population * self.DomFC_ExcrLoad * (1 - (FC_RemEff + FC_Rem_BasicSan + Rem_OpenDef))) /1000000. #million cfu/day
         
         #Manufacturing loadings: Manufacturing wastewater [m3/day] * average manufacturing effluent concentration [mg/L; cfu/100ml]
-        self.ManWWp = self.IndustryReturnFlowVol * self.factorInd_Man #multipled by factor for estimated manufacturing wastewater (based on Jones et al., 2021 data)
         self.Man_TDSload = self.ManWWp * self.ManTDS_EfflConc * (1 - TDS_RemEff) #g/day
         self.Man_BODload = self.ManWWp * self.ManBOD_EfflConc * (1 - BOD_RemEff) #g/day
         self.Man_FCload = (self.ManWWp * self.ManFC_EfflConc * (1 - FC_RemEff))/ 100. #million cfu/day
         
-        #Urban surface runoff loadings: USR return flow [m3/day] * average USR effluent concentration [mg/L; cfu/100ml]  
-        self.USR_RF = landSurface.directRunoff * self.urban_area_fraction * self.cellArea #m3 day
+        #Urban surface runoff loadings: USR return flow [m3/day] * average USR effluent concentration [mg/L; cfu/100ml]
+        if self.offlineRun:        
+            self.USR_RF = self.directRunoff * self.urban_area_fraction * self.cellArea #m3 day
+        else:            
+            self.USR_RF = landSurface.directRunoff * self.urban_area_fraction * self.cellArea #m3 day
         
         self.USR_TDSload = self.USR_RF * self.USRTDS_EfflConc * (1 - TDS_RemEff) #g/day
         self.USR_BODload = self.USR_RF * self.USRBOD_EfflConc * (1 - BOD_RemEff) #g/day
@@ -2837,9 +2884,14 @@ class Routing(object):
         
         #Irrigation loadings: Irrigation return flow (m3/day) * soil TDS (mg/L)
         #- Irrigation return flows calculated directly from PCR-GLOBWB (from direct runoff, interflow and baseflow) - TODO EDEDWIN
-        self.irr_rf_from_direct_runoff = landSurface.directRunoff * vos.getValDivZero(self.avg_irrGrossDemand, (self.avg_irrGrossDemand + self.avg_netLqWaterToSoil))
-        self.irr_rf_from_interflow     = landSurface.interflowTotal * vos.getValDivZero(self.avg_irrGrossDemand, (self.avg_irrGrossDemand + self.avg_netLqWaterToSoil))
-        self.irr_rf_from_baseflow     =  groundwater.baseflow * vos.getValDivZero(self.avg_irrGrossDemand, (self.avg_irrGrossDemand + self.avg_netLqWaterToSoil))
+        if self.offlineRun:
+            self.irr_rf_from_direct_runoff = self.directRunoff * vos.getValDivZero(self.avg_irrGrossDemand, (self.avg_irrGrossDemand + self.avg_netLqWaterToSoil))
+            self.irr_rf_from_interflow     = self.interflow * vos.getValDivZero(self.avg_irrGrossDemand, ( self.avg_irrGrossDemand + self.avg_netLqWaterToSoil))
+            self.irr_rf_from_baseflow     =  self.baseflow       * vos.getValDivZero(self.avg_irrGrossDemand, ( self.avg_irrGrossDemand + self.avg_netLqWaterToSoil)) 
+        else:
+            self.irr_rf_from_direct_runoff = landSurface.directRunoff * vos.getValDivZero(landSurface.irrGrossDemand, ( landSurface.irrGrossDemand + landSurface.netLqWaterToSoil))
+            self.irr_rf_from_interflow     = landSurface.interflowTotal * vos.getValDivZero(landSurface.irrGrossDemand, ( landSurface.irrGrossDemand + landSurface.netLqWaterToSoil))
+            self.irr_rf_from_baseflow     =  groundwater.baseflow * vos.getValDivZero(landSurface.irrGrossDemand, ( landSurface.irrGrossDemand + landSurface.netLqWaterToSoil))
 
         self.Irr_RF = (self.irr_rf_from_direct_runoff +\
                        self.irr_rf_from_interflow +\
@@ -2855,7 +2907,7 @@ class Routing(object):
         #Use pre-calculated pollutant loadings
         logger.info("Reading loadings directly")        
         
-        # read TDS loadings (combined for all sectoral activities)
+        # read TDS loadings (combined from domestic, manufacturing, urban surface runoff and irrigation sources)
         self.TDSload = vos.netcdf2PCRobjClone(\
                                  self.TDSloadNC,'TDS',\
                                  str(currTimeStep.fulldate), 
@@ -2863,7 +2915,7 @@ class Routing(object):
                                  cloneMapFileName=self.cloneMap,\
                                  LatitudeLongitude = True)
 
-        #read BOD loadings (combined for all sectoral activities)
+        #read BOD loadings (combined from domestic, manufacturing, urban surface runoff and livestock sources)
         self.BODload = vos.netcdf2PCRobjClone(\
                                  self.BODloadNC,'BOD',\
                                  str(currTimeStep.fulldate), 
@@ -2871,7 +2923,7 @@ class Routing(object):
                                  cloneMapFileName=self.cloneMap,\
                                  LatitudeLongitude = True)							 
 
-        #read FC loadings (combined for all sectoral activities)
+        #read FC loadings (combined from domestic, manufacturing, urban surface runoff and livestock sources)
         self.FCload = vos.netcdf2PCRobjClone(\
                                  self.FCloadNC,'FC',\
                                  str(currTimeStep.fulldate), 

@@ -82,6 +82,7 @@ class LandSurface(object):
     def __init__(self,iniItems,landmask,initialState=None):
         object.__init__(self)
 
+        # clone map, temporary directory, absolute path of input directory, and landmask
         self.cloneMap = iniItems.cloneMap
         self.tmpDir   = iniItems.tmpDir
         self.inputDir = iniItems.globalOptions['inputDir']
@@ -91,6 +92,14 @@ class LandSurface(object):
         self.cellArea = vos.readPCRmapClone(\
           iniItems.routingOptions['cellAreaMap'],
           self.cloneMap,self.tmpDir,self.inputDir)
+        self.cellArea = pcr.ifthen(self.landmask, self.cellArea)
+        
+        # make iniItems available for the other methods/functions:
+        self.iniItems = iniItems
+        
+        # cellArea (unit: m2)
+        self.cellArea = vos.readPCRmapClone(iniItems.routingOptions['cellAreaMap'], \
+                                            self.cloneMap, self.tmpDir, self.inputDir)
         self.cellArea = pcr.ifthen(self.landmask, self.cellArea)
         
         # number of soil layers:
@@ -110,10 +119,13 @@ class LandSurface(object):
         #
         # state variables (unit: m)
         self.stateVars = ['storUppTotal',
-                          'storLowTotal']
+                          'storLowTotal',
+                          'satDegUppTotal',
+                          'satDegLowTotal']
         #
         # flux variables (unit: m/day)
-        self.fluxVars  = ['infiltration','gwRecharge',
+        self.fluxVars  = ['infiltration','gwRecharge','netLqWaterToSoil',
+                          'totalPotET',
                           'actualET',
                           'interceptEvap',
                           'openWaterEvap',
@@ -128,14 +140,31 @@ class LandSurface(object):
                           'irrGrossDemand',
                           'nonIrrGrossDemand',
                           'totalPotentialGrossDemand',
-                          'potGroundwaterAbstract',
                           'actSurfaceWaterAbstract',
                           'allocSurfaceWaterAbstract',
+                          'desalinationAbstraction',
+                          'desalinationAllocation',
+                          'nonFossilGroundwaterAbs',
+                          'allocNonFossilGroundwater',
+                          'fossilGroundwaterAbstr',
+                          'fossilGroundwaterAlloc',
                           'landSurfaceRunoff',
-                          'totalPotET',
                           'satExcess',
                           'snowMelt',
-                          'netLqWaterToSoil']
+                          'totalGroundwaterAbstraction',
+                          'totalGroundwaterAllocation',
+                          'totalPotentialMaximumGrossDemand',
+                          'totalPotentialMaximumIrrGrossDemand',
+                          'totalPotentialMaximumIrrGrossDemandPaddy',
+                          'totalPotentialMaximumIrrGrossDemandNonPaddy',
+                          'totalPotentialMaximumNonIrrGrossDemand',
+                          'irrGrossDemandPaddy',
+                          'irrGrossDemandNonPaddy',
+                          'domesticWaterWithdrawal',
+                          'industryWaterWithdrawal',
+                          'livestockWaterWithdrawal',
+                          'nonIrrReturnFlow',
+                          'irrigationTranspirationDeficit']
         #
         # specific variables for 2 and 3 layer soil models:
         #
@@ -153,6 +182,13 @@ class LandSurface(object):
         
         # list of all variables that will be calculated/reported in landSurface.py
         self.aggrVars = self.stateVars + self.fluxVars
+        if self.numberOfSoilLayers == 2: self.aggrVars += ['satDegUpp','satDegLow']
+        if self.numberOfSoilLayers == 3: self.aggrVars += ['satDegUpp000005','satDegUpp005030','satDegLow030150']        
+        self.debugWaterBalance = iniItems.landSurfaceOptions['debugWaterBalance']
+        
+        # limitAbstraction
+        self.limitAbstraction = False
+        if iniItems.landSurfaceOptions['limitAbstraction'] == "True": self.limitAbstraction = True
 
         # assign the topography and soil parameters
         self.parameters = parSoilAndTopo.SoilAndTopoParameters(iniItems,self.landmask)
@@ -167,10 +203,14 @@ class LandSurface(object):
         if iniItems.landSurfaceOptions['includeIrrigation'] == "True":
             self.includeIrrigation = True
             self.coverTypes += ["irrPaddy","irrNonPaddy"] 
+            logger.info("Irrigation is included/considered in this run.")
+        else:    
+            logger.info("Irrigation is NOT included/considered in this run.")
+            
+        # if user define their land cover types:
+        if 'landCoverTypes' in list(iniItems.landSurfaceOptions.keys()):
+            self.coverTypes = iniItems.landSurfaceOptions['landCoverTypes'].split(",")
 
-        # limitAbstraction
-        self.limitAbstraction = False
-        if iniItems.landSurfaceOptions['limitAbstraction'] == "True": self.limitAbstraction = True
 
         # non irrigation water demand options: 
         self.waterDemandOptions(iniItems)
@@ -353,40 +393,65 @@ class LandSurface(object):
     def waterDemandOptions(self,iniItems):
 
         # domestic water demand (unit: m/day)
-        #
+        
         self.domesticWaterDemandOption = False
         try:
-            if iniItems.landSurfaceOptions['includeDomesticWaterDemand']  == "True":\
-                 self.domesticWaterDemandOption = True  
+            if iniItems.landSurfaceOptions['includeDomesticWaterDemand']  == "True":
+                self.domesticWaterDemandOption = True
+                logger.info("Domestic water demand is included in the calculation.")
         except:
-            logger.info("WARNING! Domestic water demand is not included in the calculation.")
-        #
+            logger.info("Domestic water demand is not included in the calculation.")
+        
         if self.domesticWaterDemandOption:
             self.domesticWaterDemandFile = vos.getFullPath(\
              iniItems.landSurfaceOptions['domesticWaterDemandFile'],self.inputDir,False)
 
         # industry water demand (unit: m/day)
-        #
         self.industryWaterDemandOption = False
         try:
-            if iniItems.landSurfaceOptions['includeIndustryWaterDemand']  == "True":\
-                 self.industryWaterDemandOption = True  
+            if iniItems.landSurfaceOptions['includeIndustryWaterDemand']  == "True":
+                 self.industryWaterDemandOption = True
+                 logger.info("Industry water demand is included in the calculation.")   
         except:
-            logger.info("WARNING! Industry water demand is not included in the calculation.")
-        #
+            logger.info("Industry water demand is not included in the calculation.")
+        
         if self.industryWaterDemandOption:
             self.industryWaterDemandFile = vos.getFullPath(\
              iniItems.landSurfaceOptions['industryWaterDemandFile'],self.inputDir,False)
+
+        # livestock water demand (unit: m/day)
+        self.livestockWaterDemandOption = False
+        try:    
+            if iniItems.landSurfaceOptions['includeLivestockWaterDemand']  == "True":
+                self.livestockWaterDemandOption = True  
+                logger.info("Livestock water demand is included in the calculation.")
+        except:
+            logger.info("Livestock water demand is not included in the calculation.")
+            
+        if self.livestockWaterDemandOption:
+            self.livestockWaterDemandFile = vos.getFullPath(\
+             iniItems.landSurfaceOptions['livestockWaterDemandFile'],self.inputDir,False)
+
+        # desalination water avaliability (unit: m/day)
+        self.includeDesalination = False
+        try:
+            if iniItems.landSurfaceOptions['desalinationWater'] not in ["None", "False"]:
+                logger.info("Monthly desalination water is included.")
+                self.includeDesalination = True
+                self.desalinationWaterFile = vos.getFullPath(iniItems.landSurfaceOptions['desalinationWater'], self.inputDir)
+        except:    
+            logger.info("Monthly desalination water is not included.")
 
         # historical irrigation area (unit: hectar)
         self.dynamicIrrigationArea = False
         try:
             if iniItems.landSurfaceOptions['historicalIrrigationArea'] != "None":
                 self.dynamicIrrigationArea = True
+                logger.info("Using the dynamicIrrigationArea option. Extent of irrigation areas is based on the file provided in the 'historicalIrrigationArea'.")
             else:
-                logger.info("Extent of irrigation areas is SAME for EVERY YEAR.")
+                logger.info("Extent of irrigation areas is the same for every year.")
         except:
-            logger.info("Extent of irrigation areas is SAME for EVERY YEAR.")
+            logger.info("Extent of irrigation areas is the same for every year.")
         #
         if self.dynamicIrrigationArea:
             self.dynamicIrrigationAreaFile = vos.getFullPath(\
@@ -418,8 +483,6 @@ class LandSurface(object):
 
         except:
             logger.info("Water demand can only be satisfied by the local cell.")
-        
-        # TODO: include desalinization water use
             
 
     def scaleNaturalLandCoverFractions(self): 
@@ -590,17 +653,17 @@ class LandSurface(object):
                 #
                 if self.domesticWaterDemandFile.endswith('.nc'):  
                     #
-                    self.domesticGrossDemand = pcr.cover(\
+                    self.domesticGrossDemand = pcr.max(0.0,pcr.cover(\
                      vos.netcdf2PCRobjClone(self.domesticWaterDemandFile,\
                                                 'domesticGrossDemand',\
                          currTimeStep.fulldate, useDoy = 'monthly',\
-                                 cloneMapFileName = self.cloneMap), 0.0)
+                                 cloneMapFileName = self.cloneMap), 0.0))
                     #
-                    self.domesticNettoDemand = pcr.cover(\
+                    self.domesticNettoDemand = pcr.max(0.0,pcr.cover(\
                      vos.netcdf2PCRobjClone(self.domesticWaterDemandFile,\
                                                 'domesticNettoDemand',\
                          currTimeStep.fulldate, useDoy = 'monthly',\
-                                 cloneMapFileName = self.cloneMap), 0.0)
+                                 cloneMapFileName = self.cloneMap), 0.0))
                 else:
                     string_month = str(currTimeStep.month)
                     if currTimeStep.month < 10: string_month = "0"+str(currTimeStep.month)
@@ -613,7 +676,7 @@ class LandSurface(object):
             else:
                 self.domesticGrossDemand = pcr.scalar(0.0)
                 self.domesticNettoDemand = pcr.scalar(0.0)
-                logger.info("WARNING! Domestic water demand is not included.")
+                logger.info("Domestic water demand is not included.")
             
             # ignore small values of demand (less than 1 m3 and/or 0.0001 m):
             self.domesticGrossDemand = pcr.rounddown(self.domesticGrossDemand*routing.cellArea)/routing.cellArea
@@ -630,17 +693,17 @@ class LandSurface(object):
                 #
                 if self.industryWaterDemandFile.endswith('.nc'):  
                     #
-                    self.industryGrossDemand = pcr.cover(\
+                    self.industryGrossDemand = pcr.max(0.0,pcr.cover(\
                      vos.netcdf2PCRobjClone(self.industryWaterDemandFile,\
                                                 'industryGrossDemand',\
-                         currTimeStep.fulldate, useDoy = 'yearly',\
-                                 cloneMapFileName = self.cloneMap), 0.0)
+                         currTimeStep.fulldate, useDoy = 'monthly',\
+                                 cloneMapFileName = self.cloneMap), 0.0))
                     #
-                    self.industryNettoDemand = pcr.cover(\
+                    self.industryNettoDemand = pcr.max(0.0,pcr.cover(\
                      vos.netcdf2PCRobjClone(self.industryWaterDemandFile,\
                                                 'industryNettoDemand',\
-                         currTimeStep.fulldate, useDoy = 'yearly',\
-                                 cloneMapFileName = self.cloneMap), 0.0)
+                         currTimeStep.fulldate, useDoy = 'monthly',\
+                                 cloneMapFileName = self.cloneMap), 0.0))
                 else:
                     grossFileName = self.industryWaterDemandFile+"w"+str(currTimeStep.year)+".map"
                     self.industryGrossDemand = pcr.cover(\
@@ -651,8 +714,7 @@ class LandSurface(object):
             else:
                 self.industryGrossDemand = pcr.scalar(0.0)
                 self.industryNettoDemand = pcr.scalar(0.0)
-                logger.info("WARNING! Industry water demand is not included.")
-        
+                logger.info("Industry water demand is not included.")
 
             # ignore small values of demand (less than 1 m3 and/or 0.0001 m):
             self.industryGrossDemand = pcr.rounddown(self.industryGrossDemand*routing.cellArea)/routing.cellArea
@@ -663,33 +725,93 @@ class LandSurface(object):
             self.industryNettoDemand = pcr.cover(self.industryNettoDemand,0.0)
             self.industryNettoDemand = pcr.min(self.industryGrossDemand, self.industryNettoDemand)  
 
+        # livestock water demand
+        if currTimeStep.timeStepPCR == 1 or currTimeStep.doy == 1:
+            if self.livestockWaterDemandOption: 
+                #
+                if self.livestockWaterDemandFile.endswith('.nc'):  
+                    #
+                    self.livestockGrossDemand = pcr.max(0.0,pcr.cover(\
+                     vos.netcdf2PCRobjClone(self.livestockWaterDemandFile,\
+                                                'livestockGrossDemand',\
+                         currTimeStep.fulldate, useDoy = 'monthly',\
+                                 cloneMapFileName = self.cloneMap), 0.0))
+                    #
+                    self.livestockNettoDemand = pcr.max(0.0,pcr.cover(\
+                     vos.netcdf2PCRobjClone(self.livestockWaterDemandFile,\
+                                                'livestockNettoDemand',\
+                         currTimeStep.fulldate, useDoy = 'monthly',\
+                                 cloneMapFileName = self.cloneMap), 0.0))
+                else:
+                    grossFileName = self.livestockWaterDemandFile+"w"+str(currTimeStep.year)+".map"
+                    self.livestockGrossDemand = pcr.cover(\
+                                               vos.readPCRmapClone(grossFileName,self.cloneMap,self.tmpDir), 0.0)
+                    nettoFileName = self.livestockWaterDemandFile+"n"+str(currTimeStep.year)+".map"
+                    self.livestockNettoDemand = pcr.cover(\
+                                               vos.readPCRmapClone(nettoFileName,self.cloneMap,self.tmpDir), 0.0)
+            else:
+                self.livestockGrossDemand = pcr.scalar(0.0)
+                self.livestockNettoDemand = pcr.scalar(0.0)
+                logger.info("Livestock water demand is not included.")
+
+            # gross and netto livestock water demand in m/day
+            self.livestockGrossDemand = pcr.rounddown(self.livestockGrossDemand*routing.cellArea)/routing.cellArea
+            self.livestockNettoDemand = pcr.rounddown(self.livestockNettoDemand*routing.cellArea)/routing.cellArea
+            self.livestockGrossDemand = pcr.rounddown(self.livestockGrossDemand*routing.cellArea)/routing.cellArea
+            self.livestockNettoDemand = pcr.rounddown(self.livestockNettoDemand*routing.cellArea)/routing.cellArea
+            self.livestockGrossDemand = pcr.cover(self.livestockGrossDemand,0.0)
+            self.livestockNettoDemand = pcr.cover(self.livestockNettoDemand,0.0)
+            self.livestockNettoDemand = pcr.min(self.livestockGrossDemand, self.livestockNettoDemand)  
+
         self.domesticGrossDemand = pcr.ifthen(self.landmask, self.domesticGrossDemand)
         self.domesticNettoDemand = pcr.ifthen(self.landmask, self.domesticNettoDemand)
         self.industryGrossDemand = pcr.ifthen(self.landmask, self.industryGrossDemand)
         self.industryNettoDemand = pcr.ifthen(self.landmask, self.industryNettoDemand)
+        self.livestockGrossDemand = pcr.ifthen(self.landmask, self.livestockGrossDemand)
+        self.livestockNettoDemand = pcr.ifthen(self.landmask, self.livestockNettoDemand)
+        
+        # Return flow fractions for domestic, industrial and livestock water demands (unit: fraction/percentage)
+        self.domesticReturnFlowFraction  = pcr.min(1.0, pcr.max(0.0, 1.0 - vos.getValDivZero(self.domesticNettoDemand, self.domesticGrossDemand)))
+        self.industryReturnFlowFraction  = pcr.min(1.0, pcr.max(0.0, 1.0 - vos.getValDivZero(self.industryNettoDemand, self.industryGrossDemand)))
+        self.livestockReturnFlowFraction = pcr.min(1.0, pcr.max(0.0, 1.0 - vos.getValDivZero(self.livestockNettoDemand, self.livestockGrossDemand)))
+        
+        #####--------------------TODO ED (landCover_new.py)--------------------##########
+        # make a dictionary summarizing potential demand (potential withdrawal) and its return flow fraction
+        #nonIrrigationWaterDemandDict = {}
+        #nonIrrigationWaterDemandDict['potential_demand'] = {}
+        #nonIrrigationWaterDemandDict['potential_demand']['domestic']  = self.domesticGrossDemand
+        #nonIrrigationWaterDemandDict['potential_demand']['industry']  = self.industryGrossDemand
+        #nonIrrigationWaterDemandDict['potential_demand']['livestock'] = self.livestockGrossDemand
+        #nonIrrigationWaterDemandDict['return_flow_fraction'] = {}
+        #nonIrrigationWaterDemandDict['return_flow_fraction']['domestic']  = pcr.cover(pcr.min(1.0, pcr.roundup(self.domesticReturnFlowFraction *1000.)/1000.), 1.0)
+        #nonIrrigationWaterDemandDict['return_flow_fraction']['industry']  = pcr.cover(pcr.min(1.0, pcr.roundup(self.industryReturnFlowFraction *1000.)/1000.), 1.0)
+        #nonIrrigationWaterDemandDict['return_flow_fraction']['livestock'] = pcr.cover(pcr.min(1.0, pcr.roundup(self.livestockReturnFlowFraction*1000.)/1000.), 1.0)
+        
+        #return nonIrrigationWaterDemandDict
+        ###-----END-----####
         
         # domestic (potential) water demand - TODO EDEDWIN
-        self.potentialDomGrossWaterDemand = self.domesticGrossDemand
-        self.potentialDomNettoWaterDemand = pcr.min(self.potentialDomGrossWaterDemand,\
+        potentialDomGrossWaterDemand = self.domesticGrossDemand
+        potentialDomNettoWaterDemand = pcr.min(potentialDomGrossWaterDemand,\
                                           self.domesticNettoDemand)
-        self.DomReturnFlowFraction = vos.getValDivZero(\
-         (self.potentialDomGrossWaterDemand - self.potentialDomNettoWaterDemand),\
-         (self.potentialDomGrossWaterDemand), vos.smallNumber)
+        DomReturnFlowFraction = vos.getValDivZero(\
+          (potentialDomGrossWaterDemand - potentialDomNettoWaterDemand),\
+          (potentialDomGrossWaterDemand), vos.smallNumber)
         
         # industry (potential) water demand - TODO EDEDWIN
-        self.potentialIndGrossWaterDemand = self.industryGrossDemand
-        self.potentialIndNettoWaterDemand = pcr.min(self.potentialIndGrossWaterDemand,\
+        potentialIndGrossWaterDemand = self.industryGrossDemand
+        potentialIndNettoWaterDemand = pcr.min(potentialIndGrossWaterDemand,\
                                           self.industryNettoDemand)
-        self.IndReturnFlowFraction = vos.getValDivZero(\
-         (self.potentialIndGrossWaterDemand - self.potentialIndNettoWaterDemand),\
-         (self.potentialIndGrossWaterDemand), vos.smallNumber)     
+        IndReturnFlowFraction = vos.getValDivZero(\
+         (potentialIndGrossWaterDemand - potentialIndNettoWaterDemand),\
+         (potentialIndGrossWaterDemand), vos.smallNumber)     
         
         # total (potential) non irrigation water demand
         potentialNonIrrGrossWaterDemand = self.domesticGrossDemand + self.industryGrossDemand
         potentialNonIrrNettoWaterDemand = pcr.min(potentialNonIrrGrossWaterDemand,\
                                           self.domesticNettoDemand + self.industryNettoDemand)
         
-        # fraction of return flow from domestic and industrial water demand
+        #fraction of return flow from domestic and industrial water demand
         nonIrrReturnFlowFraction = vos.getValDivZero(\
          (potentialNonIrrGrossWaterDemand - potentialNonIrrNettoWaterDemand),\
          (potentialNonIrrGrossWaterDemand), vos.smallNumber)
@@ -913,6 +1035,20 @@ class LandSurface(object):
         self.swAbstractionFraction = \
              self.partitioningGroundSurfaceAbstraction(groundwater,routing)
         
+        # get desalination water use (m/day); assume this one as potential supply
+        if self.includeDesalination: 
+            logger.info("Water use from desalination is included (annual temporal resolution).")
+            if (currTimeStep.timeStepPCR == 1 or currTimeStep.day == 1):
+                desalinationWaterUse = \
+                     pcr.ifthen(self.landmask,\
+                     pcr.cover(\
+                     vos.netcdf2PCRobjClone(self.desalinationWaterFile,'desal_capacity',\
+                         currTimeStep.fulldate, useDoy = 'yearly', cloneMapFileName = self.cloneMap), 0.0))
+                self.desalinationWaterUse = pcr.max(0.0, desalinationWaterUse)
+        else:    
+            logger.debug("Water use from desalination is not included.")
+            self.desalinationWaterUse = pcr.scalar(0.0)
+        
         # update (loop per each land cover type):
         for coverType in self.coverTypes:
             
@@ -1003,7 +1139,7 @@ class LandSurface(object):
                     self.netcdfObj.data2NetCDF(str(self.outNCDir)+"/"+ \
                                          str(var)+"_dailyTot.nc",\
                                          var,\
-                          pcr2numpy(self.__getattribute__(var),vos.MV),\
+                          pcr.pcr2numpy(self.__getattribute__(var),vos.MV),\
                                          timeStamp,timestepPCR-1)
 
             # writing monthly output to netcdf files
@@ -1025,7 +1161,7 @@ class LandSurface(object):
                         self.netcdfObj.data2NetCDF(str(self.outNCDir)+"/"+ \
                                          str(var)+"_monthTot.nc",\
                                          var,\
-                          pcr2numpy(self.__getattribute__(var+'MonthTot'),\
+                          pcr.pcr2numpy(self.__getattribute__(var+'MonthTot'),\
                            vos.MV),timeStamp,currTimeStep.monthIdx-1)
             # -average
             if self.outMonthAvgNC[0] != "None":
@@ -1048,7 +1184,7 @@ class LandSurface(object):
                         self.netcdfObj.data2NetCDF(str(self.outNCDir)+"/"+ \
                                          str(var)+"_monthAvg.nc",\
                                          var,\
-                          pcr2numpy(self.__getattribute__(var+'MonthAvg'),\
+                          pcr.pcr2numpy(self.__getattribute__(var+'MonthAvg'),\
                            vos.MV),timeStamp,currTimeStep.monthIdx-1)
             #
             # -last day of the month
@@ -1059,7 +1195,7 @@ class LandSurface(object):
                         self.netcdfObj.data2NetCDF(str(self.outNCDir)+"/"+ \
                                          str(var)+"_monthEnd.nc",\
                                          var,\
-                          pcr2numpy(self.__getattribute__(var),vos.MV),\
+                          pcr.pcr2numpy(self.__getattribute__(var),vos.MV),\
                                          timeStamp,currTimeStep.monthIdx-1)
 
             # writing yearly output to netcdf files
@@ -1081,7 +1217,7 @@ class LandSurface(object):
                         self.netcdfObj.data2NetCDF(str(self.outNCDir)+"/"+ \
                                          str(var)+"_annuaTot.nc",\
                                          var,\
-                          pcr2numpy(self.__getattribute__(var+'AnnuaTot'),\
+                          pcr.pcr2numpy(self.__getattribute__(var+'AnnuaTot'),\
                            vos.MV),timeStamp,currTimeStep.annuaIdx-1)
             # -average
             if self.outAnnuaAvgNC[0] != "None":
@@ -1103,7 +1239,7 @@ class LandSurface(object):
                         self.netcdfObj.data2NetCDF(str(self.outNCDir)+"/"+ \
                                          str(var)+"_annuaAvg.nc",\
                                          var,\
-                          pcr2numpy(self.__getattribute__(var+'AnnuaAvg'),\
+                          pcr.pcr2numpy(self.__getattribute__(var+'AnnuaAvg'),\
                            vos.MV),timeStamp,currTimeStep.annuaIdx-1)
             #
             # -last day of the year
@@ -1114,5 +1250,5 @@ class LandSurface(object):
                         self.netcdfObj.data2NetCDF(str(self.outNCDir)+"/"+ \
                                          str(var)+"_annuaEnd.nc",\
                                          var,\
-                          pcr2numpy(self.__getattribute__(var),vos.MV),\
+                          pcr.pcr2numpy(self.__getattribute__(var),vos.MV),\
                                          timeStamp,currTimeStep.annuaIdx-1)

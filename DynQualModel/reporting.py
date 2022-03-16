@@ -28,6 +28,10 @@ class Reporting(object):
         self._modelTime = modelTime
 
         self.offlineRun = configuration.routingOptions['offlineRun'] #for offline DynQual runs
+        self.loadsPerSector = configuration.routingOptions['loadsPerSector'] #for calculating loads per sector
+        
+        print("Offline Run = ", self.offlineRun)
+        print("loadsPerSector = ", self.loadsPerSector)
 
         # output directory storing netcdf files:
         self.outNCDir  = str(configuration.outNCDir)
@@ -244,7 +248,7 @@ class Reporting(object):
 
         if self.offlineRun == "False":
         # routing options only required when coupled with PCR-GLOBWB
-
+            
             self.totalLandSurfacePotET = self._model.landSurface.totalPotET 
             self.totLandSurfaceActuaET = self._model.landSurface.actualET
             
@@ -332,17 +336,60 @@ class Reporting(object):
         # Aspects related to salinity pollution
         self.TDSload = self._model.routing.TDSload #in grams
         self.routedTDS = self._model.routing.routedTDS #in grams
-        self.salinity = vos.getValDivZero(self._model.routing.routedTDS, self._model.routing.channelStorage,vos.storageThresforConc) + self._model.routing.backgroundSalinity #in mg/L
+        self.salinity = vos.getValDivZero(self._model.routing.routedTDS, self._model.routing.channelStorage,vos.storageThresforConc) + self._model.routing.backgroundSalinity #in mg/L   
+        
+        print(self.loadsPerSector)
+        
+        if self.loadsPerSector == "True":
+            #-TDS
+            self.Dom_TDSload = self._model.routing.Dom_TDSload
+            self.Man_TDSload = self._model.routing.Man_TDSload
+            self.USR_TDSload = self._model.routing.USR_TDSload
+            self.Irr_TDSload = self._model.routing.Irr_TDSload
+            self.Irr_RF      = self._model.routing.Irr_RF #TODO ED
+            
+            self.routedDomTDS = self._model.routing.routedDomTDS
+            self.routedManTDS = self._model.routing.routedManTDS
+            self.routedUSRTDS = self._model.routing.routedUSRTDS
+            self.routedIrrTDS = self._model.routing.routedIrrTDS
         
         # Aspects related to organic pollution
         self.BODload = self._model.routing.BODload #in grams
         self.routedBOD = self._model.routing.routedBOD #in grams
         self.organic = vos.getValDivZero(self._model.routing.routedBOD, self._model.routing.channelStorage,vos.storageThresforConc) #in mg/L
 
+        if self.loadsPerSector == "True":
+            #-BOD
+            self.Dom_BODload = self._model.routing.Dom_BODload
+            self.Man_BODload = self._model.routing.Man_BODload
+            self.USR_BODload = self._model.routing.USR_BODload
+            self.intLiv_BODload = self._model.routing.intLiv_BODload
+            self.extLiv_BODload = self._model.routing.extLiv_BODload
+            
+            self.routedDomBOD = self._model.routing.routedDomBOD
+            self.routedManBOD = self._model.routing.routedManBOD
+            self.routedUSRBOD = self._model.routing.routedUSRBOD
+            self.routedintLivBOD = self._model.routing.routedintLivBOD
+            self.routedextLivBOD = self._model.routing.routedextLivBOD
+
         # Aspects related to pathogen pollution
         self.FCload = self._model.routing.FCload #in million cfu
         self.routedFC = self._model.routing.routedFC #in million cfu
         self.pathogen = vos.getValDivZero(self._model.routing.routedFC, self._model.routing.channelStorage,vos.storageThresforConc) #in million cfu/L
+
+        if self.loadsPerSector  == "True":            
+            #-FC
+            self.Dom_FCload = self._model.routing.Dom_FCload
+            self.Man_FCload = self._model.routing.Man_FCload
+            self.USR_FCload = self._model.routing.USR_FCload
+            self.intLiv_FCload = self._model.routing.intLiv_FCload
+            self.extLiv_FCload = self._model.routing.extLiv_FCload
+            
+            self.routedDomFC = self._model.routing.routedDomFC
+            self.routedManFC = self._model.routing.routedManFC
+            self.routedUSRFC = self._model.routing.routedUSRFC
+            self.routedintLivFC = self._model.routing.routedintLivFC
+            self.routedextLivFC = self._model.routing.routedextLivFC
 
     def additional_post_processing(self):
         # In this method/function, users can add their own post-processing.
