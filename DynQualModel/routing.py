@@ -622,7 +622,7 @@ class Routing(object):
             
             #Per water quality sector
             if self.calculateLoads and self.offlineRun == False: 
-                self.avg_irrGrossDemand   = pcr.ifthen(self.landmask, pcr.cover(self.avg_irrGrossDemand,   0.0))
+                self.avg_irrGrossDemand   = pcr.ifthen(self.landmask, pcr.cover(self.avg_irrGrossDemand, 0.0))
                 self.avg_netLqWaterToSoil = pcr.ifthen(self.landmask, pcr.cover(self.avg_netLqWaterToSoil, 0.0))
                 
                 if self.loadsPerSector:          
@@ -1718,7 +1718,6 @@ class Routing(object):
                            pcr.min(self.maxTimestepsToAvgDischargeLong, self.timestepsToAvgDischarge)                
         self.avgBaseflow = pcr.max(0.0, self.avgBaseflow)
 
-
         # average irrigation water that is allocated from the last 30 days (needed for online runs where loadings are calculated in loop)
         if self.calculateLoads and self.offlineRun == False: 
             # calculate average irrigation gross demands from the last 30 days       
@@ -1726,15 +1725,14 @@ class Routing(object):
             self.avg_irrGrossDemand = self.avg_irrGrossDemand +\
                                       deltaAno_irrGrossDemand/\
                                       pcr.min(30.0, self.timestepsToAvgDischarge)
-            self.avg_irrGrossDemand = pcr.max(0.0, self.avg_irrGrossDemand)                        
+            self.avg_irrGrossDemand = pcr.max(0.0, self.avg_irrGrossDemand)                 
         
             # average netLqWaterToSoil from the last 30 days
             deltaAno_netLqWaterToSoil = pcr.max(0.0, landSurface.netLqWaterToSoil) - self.avg_netLqWaterToSoil  
             self.avg_netLqWaterToSoil = self.avg_netLqWaterToSoil +\
-                                      deltaAno_netLqWaterToSoil/\
-                                      pcr.min(30.0, self.timestepsToAvgDischarge)
+                                        deltaAno_netLqWaterToSoil/\
+                                        pcr.min(30.0, self.timestepsToAvgDischarge)
             self.avg_netLqWaterToSoil = pcr.max(0.0, self.avg_netLqWaterToSoil)                         
-
 
     def estimate_discharge_for_environmental_flow(self, channelStorage):
 
