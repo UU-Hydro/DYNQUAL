@@ -1,6 +1,11 @@
 #!/usr/bin/ python
 # -*- coding: utf-8 -*-
 
+'''
+Water bodies in PCR-GLOBWB2
+@author: Niko Wanders
+'''
+
 import os
 import types
 

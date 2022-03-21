@@ -3,7 +3,7 @@
 from __future__ import print_function
 
 #
-# PCR-GLOBWB (PCRaster Global Water Balance) Global Hydrological Model
+# PCR-GLOBWB2 (PCRaster Global Water Balance) Global Hydrological Model
 #
 # Copyright (C) 2016, Edwin H. Sutanudjaja, Rens van Beek, Niko Wanders, Yoshihide Wada, 
 # Joyce H. C. Bosmans, Niels Drost, Ruud J. van der Ent, Inge E. M. de Graaf, Jannis M. Hoch, 

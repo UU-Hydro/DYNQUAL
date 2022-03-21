@@ -1,6 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+'''
+Initiate spin-up for one-way coupled PCR-GLOBWB2 and DynQual.
+@authors (PCR-GLOBWB2): Edwin H. Sutanudjaja
+@authors (DynQual)    : Edward R. Jones, Niko Wanders
+'''
+
 import os
 import math
 import logging

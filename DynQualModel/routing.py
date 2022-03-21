@@ -1,6 +1,12 @@
 #!/usr/bin/ python
 # -*- coding: utf-8 -*-
 
+'''
+PCR-GLOBWB2 and DynQual routing.
+@authors (PCR-GLOBWB2): Edwin H. Sutanudjaja
+@authors (DynQual)    : Edward R. Jones, Niko Wanders 
+'''
+
 import os
 import types
 import math

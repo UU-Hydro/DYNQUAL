@@ -3,12 +3,16 @@
 from __future__ import print_function
 
 #
-# PCR-GLOBWB (PCRaster Global Water Balance) Global Hydrological Model
+# PCR-GLOBWB2 (PCRaster Global Water Balance) Global Hydrological Model
 #
 # Copyright (C) 2016, Edwin H. Sutanudjaja, Rens van Beek, Niko Wanders, Yoshihide Wada, 
 # Joyce H. C. Bosmans, Niels Drost, Ruud J. van der Ent, Inge E. M. de Graaf, Jannis M. Hoch, 
 # Kor de Jong, Derek Karssenberg, Patricia López López, Stefanie Peßenteiner, Oliver Schmitz, 
 # Menno W. Straatsma, Ekkamol Vannametee, Dominik Wisser, and Marc F. P. Bierkens
+# Faculty of Geosciences, Utrecht University, Utrecht, The Netherlands
+#
+# DynQual (Dynamic Quality) Global Water Quality Model
+# Edward R. Jones, Michelle T.H. van Vliet, Niko Wanders, Edwin H. Sutanudjaja, Rens van Beek, and Marc F. P. Bierkens
 # Faculty of Geosciences, Utrecht University, Utrecht, The Netherlands
 #
 # This program is free software: you can redistribute it and/or modify
@@ -360,7 +364,7 @@ def mergeNetCDF(inputTuple):
                 date_value = nc.num2date(time, rootgrp.variables['time'].units, rootgrp.variables['time'].calendar)
                 posCnt = nc.date2index(date_value, rootgrp.variables['time'])
                 sampleArray= rootgrp.variables[variableName][posCnt,:,:]
-                #sampleArray[sampleArray >= 1e+19]= MV #TODO
+                sampleArray[sampleArray >= 1e+19]= MV
                 sampleArray[sampleArray == variables[index][variableName]._FillValue]= MV
                 variableArray[row0:row1,col0:col1][variableArray[row0:row1,col0:col1] == MV]= \
                     sampleArray[variableArray[row0:row1,col0:col1] == MV]

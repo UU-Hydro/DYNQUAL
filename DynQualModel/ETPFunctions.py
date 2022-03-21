@@ -5,15 +5,12 @@ import math
 #  LET OP!! PCR Pythong computes trigonometric function in degres by default. UNLIKE C, UNLIKE PYTON!
 # Convert all arguments to deg using * 180 / pi
 
-
-
 def HamonPotET(airT,doy,lat):
     rhoSat =  2.167 * satPressure (airT) / (airT + 273.15)
     dayLen = dayLength(doy,lat)
     pet     = 165.1 * 2.0 * dayLen * rhoSat # // 2 * DAYLEN = daylength as frac
     pet = pet / 1000 # in meters!
     return pet
-
 
 def dayLength(doy,lat):
     """ daylength fraction of day  """
@@ -29,7 +26,6 @@ def dayLength(doy,lat):
     h = pcr.ifthenelse(arg > 1.0, 0.0,h) # /* sun stays below horizon */
     h = pcr.ifthenelse(arg <  -1.0 ,math.pi,h) # /* sun stays above horizon */
     return (h /  math.pi)
-
 
 def satPressure ( airT):
     """ calculates saturated vp from airt temperature Murray (1967) """

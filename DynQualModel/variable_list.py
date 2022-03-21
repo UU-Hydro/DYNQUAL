@@ -1,9 +1,7 @@
 '''
-List of variables.
-
-Created on July 7, 2014
-
-@author: Edwin H. Sutanudjaja
+List of variables for PCR-GLOBWB2 and DynQual
+@authors (PCR-GLOBWB2): Edwin H. Sutanudjaja
+@authors (DynQual)    : Edward R. Jones, Niko Wanders
 '''
 
 netcdf_short_name = {}

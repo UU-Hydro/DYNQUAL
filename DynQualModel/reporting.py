@@ -1,9 +1,7 @@
 '''
-Takes care of reporting (writing) output to netcdf files. Aggregates totals and averages for various time periods.
-@author: Edwin H. Sutanudjaja
-
-Created on Jul 28, 2014. 
-This "reporting.py" module is not the same as the one module initiated by Niels Drost.
+Reporting (writing) of PCR-GLOBWB2 and DynQual output variables to netcdf files. Aggregates totals and averages for various time periods.
+@authors (PCR-GLOBWB2): Edwin H. Sutanudjaja
+@authors (DynQual)    : Edward R. Jones
 '''
 
 import os
@@ -326,24 +324,27 @@ class Reporting(object):
         # dynamic flooded fraction (-)
         self.dynamicFracWat = self._model.routing.dynamicFracWat
         
-        # channel storage (K)
+        # channel storage (m3)
         self.channelStorage = self._model.routing.channelStorage
+        
+        # channel storage with discharge constraint (for calculating in-stream concentrations)
+        Qthres = pcr.cover(0.1) #in m3/s
+        self.channelStorage_Qthres = pcr.ifthenelse(self.discharge > Qthres, self.channelStorage, vos.MV)
         
         # water temperature (K)
         self.waterTemp = self._model.routing.waterTemp
         
-        # water height (K)
+        # water height (m)
         self.waterHeight = self._model.routing.water_height
        
-        # ice thickness (K)
+        # ice thickness (m)
         self.iceThickness = self._model.routing.iceThickness
         
         # Aspects related to salinity pollution
         self.TDSload = self._model.routing.TDSload #in grams
         self.routedTDS = self._model.routing.routedTDS #in grams
-        self.salinity = vos.getValDivZero(self._model.routing.routedTDS, self._model.routing.channelStorage,vos.storageThresforConc) + self._model.routing.backgroundSalinity #in mg/L   
-        
-        print(self.loadsPerSector)
+        self.salinity = pcr.ifthenelse(self.channelStorage_Qthres != vos.MV, self._model.routing.routedTDS / self.channelStorage_Qthres, vos.MV) #non-natural salinity in mg/L
+        self.salinity = pcr.ifthenelse(self.salinity != vos.MV, self.salinity + self._model.routing.backgroundSalinity,vos.MV) #non-natural + background salinity in mg/L   
         
         if self.loadsPerSector == "True":
             #-TDS
@@ -351,7 +352,6 @@ class Reporting(object):
             self.Man_TDSload = self._model.routing.Man_TDSload
             self.USR_TDSload = self._model.routing.USR_TDSload
             self.Irr_TDSload = self._model.routing.Irr_TDSload
-            self.Irr_RF      = self._model.routing.Irr_RF #TODO ED
             
             self.routedDomTDS = self._model.routing.routedDomTDS
             self.routedManTDS = self._model.routing.routedManTDS
@@ -361,7 +361,7 @@ class Reporting(object):
         # Aspects related to organic pollution
         self.BODload = self._model.routing.BODload #in grams
         self.routedBOD = self._model.routing.routedBOD #in grams
-        self.organic = vos.getValDivZero(self._model.routing.routedBOD, self._model.routing.channelStorage,vos.storageThresforConc) #in mg/L
+        self.organic = pcr.ifthenelse(self.channelStorage_Qthres != vos.MV, self._model.routing.routedBOD / self.channelStorage_Qthres, vos.MV) #in mg/l
 
         if self.loadsPerSector == "True":
             #-BOD
@@ -380,7 +380,7 @@ class Reporting(object):
         # Aspects related to pathogen pollution
         self.FCload = self._model.routing.FCload #in million cfu
         self.routedFC = self._model.routing.routedFC #in million cfu
-        self.pathogen = vos.getValDivZero(self._model.routing.routedFC, self._model.routing.channelStorage,vos.storageThresforConc) #in million cfu/L
+        self.pathogen = pcr.ifthenelse(self.channelStorage_Qthres != vos.MV, self._model.routing.routedFC / self.channelStorage_Qthres, vos.MV) # in cfu/100ml
 
         if self.loadsPerSector  == "True":            
             #-FC

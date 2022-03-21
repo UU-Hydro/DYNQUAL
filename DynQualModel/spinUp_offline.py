@@ -1,6 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+'''
+Initiate spin-up for DynQual in offline congifuration.
+@authors (DynQual)    : Niko Wanders, Edward R. Jones
+'''
+
 import os
 import math
 import logging
