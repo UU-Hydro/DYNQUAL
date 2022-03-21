@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -t 12:00:00
+#SBATCH -t 120:00:00
 #SBATCH -p thin
 #SBATCH -N 1
 #SBATCH -n 128
