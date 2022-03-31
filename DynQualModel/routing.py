@@ -1,11 +1,9 @@
 #!/usr/bin/ python
 # -*- coding: utf-8 -*-
 
-'''
-PCR-GLOBWB2 and DynQual routing.
-@authors (PCR-GLOBWB2): Edwin H. Sutanudjaja
-@authors (DynQual)    : Edward R. Jones, Niko Wanders 
-'''
+#PCR-GLOBWB2 and DynQual routing.
+#@authors (PCR-GLOBWB2): Edwin H. Sutanudjaja
+#@authors (DynQual)    : Edward R. Jones, Niko Wanders
 
 import os
 import types
@@ -2149,6 +2147,7 @@ class Routing(object):
                                   useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True)
+        self.baseflow = pcr.ifthen(self.landmask,self.baseflow)
         
         self.interflowTotal = vos.netcdf2PCRobjClone(\
                                         interflowNC,"interflow",\
@@ -2156,13 +2155,16 @@ class Routing(object):
                                         useDoy = None,
                                         cloneMapFileName=self.cloneMap,\
                                         LatitudeLongitude = True)
-                                  
+        self.interflowTotal = pcr.ifthen(self.landmask,self.interflowTotal)
+                                          
         self.directRunoff = vos.netcdf2PCRobjClone(\
                                   directRunoffNC, "direct_runoff",\
                                   str(currTimeStep.fulldate),
                                   useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True)
+        self.directRunoff = pcr.ifthen(self.landmask,self.directRunoff)
+                                               
         self.runoff = self.directRunoff + self.interflowTotal + self.baseflow
 
     def readPowerplantData(self, currTimeStep):
@@ -2469,6 +2471,7 @@ class Routing(object):
                                  useDoy = None,
                                  cloneMapFileName=self.cloneMap,\
                                  LatitudeLongitude = True)
+        self.TDSload = pcr.ifthen(self.landmask, self.TDSload)
 
         #read BOD loadings (combined for all sectoral activities)
         self.BODload = vos.netcdf2PCRobjClone(\
@@ -2477,7 +2480,8 @@ class Routing(object):
                                  useDoy = None,
                                  cloneMapFileName=self.cloneMap,\
                                  LatitudeLongitude = True)							 
-
+        self.BODload = pcr.ifthen(self.landmask, self.BODload)
+        
         #read FC loadings (combined for all sectoral activities)
         self.FCload = vos.netcdf2PCRobjClone(\
                                  self.FCloadNC,'FC',\
@@ -2485,7 +2489,8 @@ class Routing(object):
                                  useDoy = None,
                                  cloneMapFileName=self.cloneMap,\
                                  LatitudeLongitude = True)                                   
-        
+        self.BODload = pcr.ifthen(self.landmask, self.FCload)
+                
     def energyLocal(self, meteo, landSurface, groundwater, timeSec = vos.secondsPerDay()):
         #-surface water energy fluxes [W/m2]
         # within the current time step
