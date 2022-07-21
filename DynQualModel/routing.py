@@ -466,7 +466,6 @@ class Routing(object):
                                                     
                 #Wastewater pathways and removal efficiencies (treatment [tertiary, secondary, primary], collected but untreated, basic sanitation, open defecation, direct)
                 self.WWtPathwaysNC = vos.getFullPath(iniItems.routingOptions["WWtPathwaysNC"], self.inputDir)
-                #self.WWtRemEffTBL = iniItems.routingOptions["WWtRemEffs"] #TODO EDNIKO -> Change this to a flexible table
                 self.TDS_Ter_RemEff = pcr.scalar(0.)
                 self.TDS_Sec_RemEff = pcr.scalar(0.)
                 self.TDS_Pri_RemEff = pcr.scalar(0.)
@@ -2185,7 +2184,8 @@ class Routing(object):
                                              useDoy = None,
                                              cloneMapFileName=self.cloneMap,\
                                              LatitudeLongitude = True,specificFillValue = None) #fraction urban area (0-1)
-
+        self.urban_area_fraction = pcr.cover(self.urban_area_fraction,0) #if urban fraction missing (e.g. for lakes), make 0
+        
         #Livestock
         self.BufalloPopulation = vos.netcdf2PCRobjClone(\
                                  self.LivPopulationNC,'BufalloPop',\
@@ -2193,59 +2193,67 @@ class Routing(object):
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #input pathway for bufallo population (5 arc-mins)
-
+        self.BufalloPopulation = pcr.cover(self.BufalloPopulation,0.)
+        
         self.ChickenPopulation = vos.netcdf2PCRobjClone(\
                                  self.LivPopulationNC,'ChickenPop',\
                                  str(currTimeStep.fulldate), 
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #input pathway for chicken population (5 arc-mins)
-                                  
+        self.ChickenPopulation = pcr.cover(self.ChickenPopulation,0.)
+                                          
         self.CowPopulation = vos.netcdf2PCRobjClone(\
                                  self.LivPopulationNC,'CowPop',\
                                  str(currTimeStep.fulldate), 
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #input pathway for cow population (5 arc-mins)
-
+        self.CowPopulation = pcr.cover(self.CowPopulation,0.)
+        
         self.DuckPopulation = vos.netcdf2PCRobjClone(\
                                  self.LivPopulationNC,'DuckPop',\
                                  str(currTimeStep.fulldate), 
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #input pathway for duck population (5 arc-mins)                 
-          
+        self.DuckPopulation = pcr.cover(self.DuckPopulation,0.)
+                  
         self.GoatPopulation = vos.netcdf2PCRobjClone(\
                                  self.LivPopulationNC,'GoatPop',\
                                  str(currTimeStep.fulldate), 
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #input pathway for goat population (5 arc-mins)  
-
+        self.GoatPopulation = pcr.cover(self.GoatPopulation,0.)
+        
         self.HorsePopulation = vos.netcdf2PCRobjClone(\
                                  self.LivPopulationNC,'HorsePop',\
                                  str(currTimeStep.fulldate), 
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #input pathway for horse population (5 arc-mins)  
-                                  
+        self.HorsePopulation = pcr.cover(self.HorsePopulation,0.)
+                                          
         self.PigPopulation = vos.netcdf2PCRobjClone(\
                                  self.LivPopulationNC,'PigPop',\
                                  str(currTimeStep.fulldate), 
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #input pathway for pig population (5 arc-mins)  
-
+        self.PigPopulation = pcr.cover(self.PigPopulation,0.)
+        
         self.SheepPopulation = vos.netcdf2PCRobjClone(\
                                  self.LivPopulationNC,'SheepPop',\
                                  str(currTimeStep.fulldate), 
                                  useDoy = None,
                                   cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = None) #input pathway for sheep population (5 arc-mins)            
-
+        self.SheepPopulation = pcr.cover(self.SheepPopulation,0.)
+        
         #Calculate livestock densities accounting for livestock units (Wen et al., 2018)
         self.cellArea_km2 = self.cellArea/1000000. #convert m2 to km2
-        self.LivDensityThres = pcr.scalar(25.) #livestock density threshold TODO EDNIKO -> convert these (and below values) to flexible table
+        self.LivDensityThres = pcr.scalar(25.)
         
         self.BufalloDensity = self.BufalloPopulation/ self.cellArea_km2
         self.ChickenDensity = (self.ChickenPopulation * 0.01) /self.cellArea_km2
