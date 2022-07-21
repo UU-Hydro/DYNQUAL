@@ -363,7 +363,7 @@ class Routing(object):
             self.radCon= 0.25
             self.radSlope= 0.50
             self.stefanBoltzman= 5.67e-8 # [W/m2/K]
-            self.maxThresTemp = pcr.scalar(322.15) # max river temperature set to 318.15 K (or 50C)
+            self.maxThresTemp = pcr.scalar(322.15) # max river temperature set to 322.15 K (or 50C)
 
             #- Paths to cloudcover file
             self.cloudFileNC = vos.getFullPath(iniItems.meteoOptions['cloudcoverNC'], self.inputDir)
@@ -1402,18 +1402,18 @@ class Routing(object):
             # Input data provided at daily resolution, unless otherwise adjusted in function
             self.readExtensiveMeteo(currTimeStep)
             
-            # Input data provided at monthly resolution, unless otherwise adjusted in function
+            # Input data for pollutant loadings typically provided at monthly resolution
             if currTimeStep.day == 1:
                 self.readPowerplantData(currTimeStep)
             
                 if self.calculateLoads:
-                    self.readPollutantLoadingsInputData(currTimeStep)
-                else:
-                    self.readPollutantLoadings(currTimeStep)    
+                    self.readPollutantLoadingsInputData(currTimeStep)  
             
-            # Pollutant loadings calculated at daily resolution, unless otherwise adjusted in function
+            # Pollutant loadings calculated (or read in) at daily resolution, unless otherwise adjusted in function
             if self.calculateLoads:
                 self.calculatePollutantLoadings(currTimeStep,landSurface,groundwater)
+            else:
+                self.readPollutantLoadings(currTimeStep)  
                 
             self.channelStorageTimeBefore = pcr.max(0.0, self.channelStorage)
             self.energyLocal(meteo, landSurface, groundwater)
@@ -1563,11 +1563,8 @@ class Routing(object):
         if self.quality:
             # Input data provided at daily resolution, unless otherwise adjusted in function
             self.readExtensiveMeteo(currTimeStep)
-            
-            # Input data provided at monthly resolution, unless otherwise adjusted in function
-            if currTimeStep.day == 1 or currTimeStep.timeStepPCR == 1:
-                self.readPowerplantData(currTimeStep)
-                self.readPollutantLoadings(currTimeStep)
+            self.readPowerplantData(currTimeStep)
+            self.readPollutantLoadings(currTimeStep)
 
             self.channelStorageTimeBefore = pcr.max(0.0, self.channelStorage)
             self.energyLocal_routing_only(meteo)
@@ -2085,28 +2082,28 @@ class Routing(object):
             self.cloudCover = vos.netcdf2PCRobjClone(\
                                      self.cloudFileNC,'cld',\
                                      str(currTimeStep.fulldate), 
-                                     useDoy = None,
+                                     useDoy = "monthly",
                                       cloneMapFileName=self.cloneMap,\
                                       LatitudeLongitude = True,specificFillValue = -999.)/pcr.scalar(100)
 
             self.vaporPressure = vos.netcdf2PCRobjClone(\
                                      self.vapFileNC,'vap',\
                                      str(currTimeStep.fulldate), 
-                                     useDoy = None,
+                                     useDoy = "daily",
                                       cloneMapFileName=self.cloneMap,\
                                       LatitudeLongitude = True,specificFillValue = -999.)
                                       
             self.annualT = vos.netcdf2PCRobjClone(\
                                              self.annualTFileNC,'tas',\
                                              str(currTimeStep.fulldate), 
-                                             useDoy = None,
+                                             useDoy = "yearly",
                                               cloneMapFileName=self.cloneMap,\
                                               LatitudeLongitude = True,specificFillValue = -999.) + pcr.scalar(273.15)                                      
                                   
         self.radiation =  vos.netcdf2PCRobjClone(\
                                  self.radFileNC,'rsds',\
                                  str(currTimeStep.fulldate), 
-                                 useDoy = "day",
+                                 useDoy = "daily",
                                  cloneMapFileName=self.cloneMap,\
                                   LatitudeLongitude = True,specificFillValue = -999.)
 
@@ -2453,7 +2450,7 @@ class Routing(object):
         
     def readPollutantLoadings(self, currTimeStep):
         #Use pre-calculated pollutant loadings
-        logger.info("Reading loadings directly (at monthly timestep)")        
+        logger.info("Reading loadings directly")        
         
         # read TDS loadings (combined for all sectoral activities)
         self.TDSload = vos.netcdf2PCRobjClone(\
@@ -2480,7 +2477,7 @@ class Routing(object):
                                  useDoy = None,
                                  cloneMapFileName=self.cloneMap,\
                                  LatitudeLongitude = True)                                   
-        self.BODload = pcr.ifthen(self.landmask, self.FCload)
+        self.FCload = pcr.ifthen(self.landmask, self.FCload)
                 
     def energyLocal(self, meteo, landSurface, groundwater, timeSec = vos.secondsPerDay()):
         #-surface water energy fluxes [W/m2]
