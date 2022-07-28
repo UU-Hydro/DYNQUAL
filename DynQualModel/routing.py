@@ -2089,7 +2089,7 @@ class Routing(object):
             self.vaporPressure = vos.netcdf2PCRobjClone(\
                                      self.vapFileNC,'vap',\
                                      str(currTimeStep.fulldate), 
-                                     useDoy = "daily",
+                                     useDoy = "monthly",
                                       cloneMapFileName=self.cloneMap,\
                                       LatitudeLongitude = True,specificFillValue = -999.)
                                       
@@ -2147,18 +2147,20 @@ class Routing(object):
         self.runoff = self.directRunoff + self.interflowTotal + self.baseflow
 
     def readPowerplantData(self, currTimeStep):
-        logger.info("Reading powerplant data")
-        #read Power return flows (from Lohrmann et al., 2019)
-        self.PowRF =  vos.netcdf2PCRobjClone(\
-                                 self.PowRFNC,'PowRF',\
-                                 str(currTimeStep.fulldate), 
-                                 useDoy = None,
-                                 cloneMapFileName=self.cloneMap,\
-                                  LatitudeLongitude = True,specificFillValue = None)
         
-        #Define delta T heat dump
-        self.deltaT = pcr.scalar(7.) #difference between effluent temperature and river temperature (K) (van Vliet et al., 2012) 
-        self.PowTwload = self.PowRF * self.specificHeatWater * self.densityWater * self.deltaT #W
+        #read power return flows (from Lohrmann et al., 2019)
+        if currTimeStep.day == 1:
+            logger.info("Reading powerplant data")
+            self.PowRF =  vos.netcdf2PCRobjClone(\
+                                     self.PowRFNC,'PowRF',\
+                                     str(currTimeStep.fulldate), 
+                                     useDoy = None,
+                                     cloneMapFileName=self.cloneMap,\
+                                      LatitudeLongitude = True,specificFillValue = None)
+        
+            #Define delta T heat dump
+            self.deltaT = pcr.scalar(7.) #difference between effluent temperature and river temperature (K) (van Vliet et al., 2012) 
+            self.PowTwload = self.PowRF * self.specificHeatWater * self.densityWater * self.deltaT #W
     
     def readPollutantLoadingsInputData(self, currTimeStep):
         logger.info("Loading input data required to calculate pollutant loadings")    
