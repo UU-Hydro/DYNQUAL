@@ -32,18 +32,12 @@ For running DynQual, a configuration .ini file is required. Some example configu
 
 ## Running DynQual
 
-Ensure the correct conda environment in a command prompt:
-
-`conda activate pcrglobwb_python3`
+Ensure the correct conda environment in a command prompt: `conda activate pcrglobwb_python3`
 
 Navigate to the DynQual model directory (*DynQualModel*). You can start a DynQual run using the following commands:
 
-For **online** run:
+For **online** run: `python deterministic_runner.py <ini_configuration_file>`
 
-`python deterministic_runner.py <ini_configuration_file>`
-
-For **offline** run:
-
-`python deterministic_runner_offline.py <ini_configuration_file>`
+For **offline** run: `python deterministic_runner_offline.py <ini_configuration_file>`
 
 where <ini_configuration_file> is your configuration file of DynQual.
