@@ -1,12 +1,27 @@
-# DYNQUAL
-Water quality model for simulating water temperature (Tw) and salinity (TDS), organic (BOD) and pathogen (FC) pollution.
+# DynQual
 
-Builds on the global hydrological model PCR-GLOBWB (https://github.com/UU-Hydro/PCR-GLOBWB_model) and the water temperature model DynWat (https://github.com/wande001/dynWat).
+The dynamical water quality routing model (DynQual) is a large scale water quality model for simulating daily water temperature (Tw), total dissolved solids (TDS), biological oxygen demand (BOD) and fecal coliform (FC) at 5 arc-minute spatial resolution with a daily timestep. 
 
-Version allows for DynQual to be run in both 'online' and 'offline' configurations: 
-- Online version is one-way coupled with PCR-GLOBWB: in .ini file set 'offlineRun = False'
-- Offline version can be forced with hydrological (baseflow, interflow, direct runoff; in m day-1) input data from any GHM: in .ini file set 'offlineRun = True'
+The model builds on the global hydrological model PCR-GLOBWB2 (Sutanudjaja et al., 2018; https://github.com/UU-Hydro/PCR-GLOBWB_model) and the water temperature model DynWat (Wanders et al., 2019; https://github.com/wande001/dynWat), allowing for both the quantification of pollutant emissions from different human water use activities and their subsequent routing through the surface water network. Water temperature is simulated by solving the surface water energy balance, while TDS, BOD and FC concentrations are simulated accounting for both the dilution capacity and in-stream decay processes.
 
-Pollutant loadings can be calculated within DynQual (only in online configuration) or prescribed as a forcing (online & offline configurations):
-- Pre-calculated pollutant loadings prescribed as a forcing: in .ini file set 'calculateLoads = False'
-- Pollutant loadings calculated within DynQual: in .ini file set 'calculateLoads = True'. Here, additional socio-economic data must be provided to enable calculation of pollutant loadings.
+We offer two options for running DynQual:
+1)	One-way coupled with PCR-GLOBWB2; or
+2)	In a stand-alone configuration with user-defined hydrological input from any land surface or hydrological model (i.e. surface runoff, interflow and baseflow).
+
+In both model configurations, pollutant loadings can be prescribed directly (akin to a forcing). Alternatively, when running DynQual coupled with PCR-GLOBWB2, pollutant loadings can be simulated within the model runs by providing additional socio-economic input data.
+
+This repository holds an installation guide and the model scripts for running DynQual in either configuration. A user manual is also provided, with an example set-up for the Rhine-Meuse basin that includes all necessary input data (~ 6GB).
+
+Additionally, a global set-up is also provided that links to input files available on the OPeNDAP server (https://opendap.4tu.nl/thredds/catalog/data2/pcrglobwb/catalog.html). This allows users to access input files from a remote server and thus perform DynQual runs without needing to download the input files locally (> 250 GB).
+
+**Contact (DynQual)**: Edward R. Jones (e.r.jones@uu.nl)
+
+**Contact (PCR-GLOBWB2)**: Edwin H. Sutanudjaja (E.H.Sutanudjaja@uu.nl). 
+
+
+### Main references/ papers:
+**DynQual**: Jones, E.R., Bierkens M. F. P., Wanders, N., Sutanudjaja, E. H., van Beek, R., van Vliet, M. T. H. (in submission). DynQual: A high-resolution global surface water quality model.
+
+**PCR-GLOBWB2**: Sutanudjaja, E. H., van Beek, R., Wanders, N., Wada, Y., Bosmans, J. H. C., Drost, N., van der Ent, R. J., de Graaf, I. E. M., Hoch, J. M., de Jong, K., Karssenberg, D., López López, P., Peßenteiner, S., Schmitz, O., Straatsma, M. W., Vannametee, E., Wisser, D., and Bierkens, M. F. P. (2018). PCR-GLOBWB 2: a 5 arcmin global hydrological and water resources model, Geosci. Model Dev., 11, 2429-2453, https://doi.org/10.5194/gmd-11-2429-2018.
+
+**DynWat**: Wanders, N., van Vliet, M. T., Wada, Y., Bierkens, M. F., & van Beek, L. P. (2019). High‐resolution global water temperature modeling. Water Resources Research, 55(4), 2760-2778.
