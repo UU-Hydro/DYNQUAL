@@ -25,7 +25,9 @@ DynQual can be installed following similar steps as for PCR-GLOBWB2 (https://git
 
 ## DynQual configuration .ini file
 
-For running DynQual, a configuration .ini file is required. Some example configuration .ini files are provided in the 'ini' directory, both for DynQual runs that are one-way coupled to PCR-GLOBWB2 ("Online") and for runs using hydrological input as a forcing ("Offline").
+For running DynQual, a configuration .ini file is required. In this file, you provide all the necessary information related to your run (e.g. time period, 
+
+Some example configuration .ini files are provided in the 'ini' directory, both for DynQual runs that are one-way coupled to PCR-GLOBWB2 ("Online") and for runs using hydrological input as a forcing ("Offline").
 
 
 
