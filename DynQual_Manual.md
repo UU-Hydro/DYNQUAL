@@ -19,4 +19,4 @@ DynQual can be installed following similar steps as for PCR-GLOBWB2 (https://git
 
 4. Clone or download the DynQual repository into the current working directory.
 
-`git clone https://github.com/UU-Hydro/PCR-GLOBWB_model.git`
+`git clone https://github.com/UU-Hydro/DYNQUAL.git`
