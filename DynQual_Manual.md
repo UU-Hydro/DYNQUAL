@@ -32,7 +32,7 @@ Some example configuration .ini files are provided in the 'ini' directory, both 
 Some adjustments must be made:
 - `inputDir =`  : this must be set to the directory where the input data is stored.
 - `outputDir =` : this must be set to a directory you can access.
-- `cloneMap =`  : please make sure this is stored locally in your computer. The cloneMap file defines the spatial resolution and extent of your study area and must be in the pcraster format. Some examples are given in this [repository](https://github.com/UU-Hydro/PCR-GLOBWB_model/blob/master/clone_landmask_maps/clone_landmask_examples.zip) 
+- `cloneMap =`  : The cloneMap file defines the spatial resolution and extent of your study area and must be in the pcraster format. Please make sure this is stored **locally** in your computer. Some examples are given in this [repository](https://github.com/UU-Hydro/PCR-GLOBWB_model/blob/master/clone_landmask_maps/clone_landmask_examples.zip). 
 
 Other adjustments are optional (e.g.):
 - `startTime =` and `endTime =` : denote your simulation period.
