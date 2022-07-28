@@ -37,7 +37,7 @@ Some adjustments must be made:
 Other adjustments are optional (e.g.):
 - `startTime =` and `endTime =` : denote your simulation period.
 - `precipitationNC =` : denotes the location of your precipitation input data file, relative to `inputDir`.
-- `outDailyTotNC =` : denote which variables you would like written to netcdfs at daily resolution to `outputDir/netcdf/`. 
+- `outDailyTotNC =` : denote which variables you to write to netcdf at daily resolution to `outputDir/netcdf/`. 
 
 Some DynQual specific adjustments can also be made (e.g.):
 - `calculateLoads =` : Set to TRUE for simulating pollutant loadings, FALSE for prescribing (pre-calculated) loadings. Note: TRUE is only avaliable for **online** DynQual runs.
