@@ -34,7 +34,7 @@ For running DynQual, a configuration .ini file is required. Some example configu
 
 Ensure the correct conda environment in a command prompt:
 
-'conda activate pcrglobwb_python3'
+`conda activate pcrglobwb_python3`
 
 Navigate to the DynQual model directory (*DynQualModel*). You can start a DynQual run using the following commands:
 
