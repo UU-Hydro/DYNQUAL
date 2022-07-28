@@ -37,9 +37,11 @@ Ensure the correct conda environment in a command prompt:
 Navigate to the DynQual model directory (*DynQualModel*). You can start a DynQual run using the following commands:
 
 For **online** run:
+
 'python deterministic_runner.py <ini_configuration_file>'
 
 For **offline** run:
+
 'python deterministic_runner_offline.py <ini_configuration_file>'
 
-where <ini_configuration_file> is the configuration file of DynQual.
+where **<ini_configuration_file>** is the configuration file of DynQual.
