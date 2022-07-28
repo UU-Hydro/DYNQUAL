@@ -13,16 +13,16 @@ Please follow the following steps:
 
 2. Get the requirement or environment file from this repository conda_env/pcrglobwb_py3.yml and use it to install all modules required (e.g. PCRaster, netCDF4) to run PCR-GLOBWB:
 
-conda env create --name pcrglobwb_python3 -f pcrglobwb_py3.yml
+`conda env create --name pcrglobwb_python3 -f pcrglobwb_py3.yml`
 
-The requirements file will create a environment named pcrglobwb_python3.
+  The requirements file will create a environment named pcrglobwb_python3.
 
 3. Activate the environment in a command prompt:
 
-conda activate pcrglobwb_python3
+`conda activate pcrglobwb_python3`
 
 4. Clone or download this repository. We suggest to use the latest version of the model, which should also be in the default branch.
 
-git clone https://github.com/UU-Hydro/PCR-GLOBWB_model.git
+`git clone https://github.com/UU-Hydro/PCR-GLOBWB_model.git`
 
-This will clone PCR-GLOBWB into the current working directory.
+  This will clone PCR-GLOBWB into the current working directory.
