@@ -36,7 +36,7 @@ Some adjustments must be made:
 
 Other adjustments are optional (e.g.):
 - `startTime =` and `endTime =` : denote your simulation period.
-- `precipitationNC =` : denotes the location of your input data file, relative to `inputDir`.
+- `precipitationNC =` : denotes the location of your precipitation input data file, relative to `inputDir`.
 - `outDailyTotNC =` : denote which variables you would like written to netcdfs at daily resolution to `outputDir/netcdf/`. 
 
 Some DynQual specific adjustments can also be made (e.g.):
