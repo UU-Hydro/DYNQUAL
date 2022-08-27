@@ -10,9 +10,11 @@ We offer two options for running DynQual:
 
 In both model configurations, pollutant loadings can be prescribed directly (akin to a forcing). Alternatively, when running DynQual coupled with PCR-GLOBWB2, pollutant loadings can be simulated within the model runs by providing additional socio-economic input data.
 
-This repository holds an installation guide and the model scripts for running DynQual in either configuration (DynQual_Manual.md). An example set-up that includes all necessary input data for the Rhine-Meuse basin (~ 6GB) is provided through Zenodo (https://doi.org/10.5281/zenodo.7027242).
+This repository holds an installation guide and the model scripts for running DynQual in either configuration (DynQual_Manual.md).
 
-Additionally, a global set-up is also provided that links to input files available on the OPeNDAP server (https://opendap.4tu.nl/thredds/catalog/data2/pcrglobwb/catalog.html). This allows users to access input files from a remote server and thus perform DynQual runs without needing to download the input files locally (> 250 GB).
+An example set-up that includes all necessary input data for the Rhine-Meuse basin (~ 6GB) is provided through Zenodo (https://doi.org/10.5281/zenodo.7027242). The related .ini files necessary for running DynQual in the Rhine basin are provided through this GitHub. 
+
+Additionally, a global set-up is also provided that links to input files available on the OPeNDAP server (https://opendap.4tu.nl/thredds/catalog/data2/pcrglobwb/catalog.html). This allows users to access input files from a remote server and thus perform DynQual runs without needing to download the input files locally (> 250 GB). The related .ini files necessary for running DynQual linked to te OPenDAP server are provided through this GitHub. 
 
 **Contact (DynQual)**: Edward R. Jones (e.r.jones@uu.nl)
 
