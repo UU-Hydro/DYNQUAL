@@ -7,11 +7,11 @@ This file contains information for installing and running DynQual.
 
 DynQual can be installed following similar steps as for PCR-GLOBWB2 (https://github.com/UU-Hydro/PCR-GLOBWB_model)
 
-1. You will need a working Python environment, we recommend to install Miniconda, particularly for Python 3. Follow their instructions given at https://docs.conda.io/en/latest/miniconda.html. The user guide and short reference on conda can be found [here](https://docs.conda.io/projects/conda/en/latest/user-guide/cheatsheet.html).
-
-2. Clone or download the DynQual repository into the current working directory.
+1. Clone or download the DynQual repository into the current working directory.
 
 `git clone https://github.com/UU-Hydro/DYNQUAL.git`
+
+2. You will need a working Python environment, we recommend to install Miniconda, particularly for Python 3. Follow their instructions given at https://docs.conda.io/en/latest/miniconda.html. The user guide and short reference on conda can be found [here](https://docs.conda.io/projects/conda/en/latest/user-guide/cheatsheet.html).
 
 3. Install all modules required (e.g. PCRaster, netCDF4) for running DynQual by creating a conda environment using the following command (Note: make sure you navigating to the DynQualModel/ folder before running this line):
 
