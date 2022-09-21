@@ -17,7 +17,7 @@ DynQual can be installed following similar steps as for PCR-GLOBWB2 (https://git
 
 `conda env create --name pcrglobwb_python3 -f pcrglobwb_py3.yml`
 
-4. Activate the environment in a command prompt:
+4. Activate the environment in a command prompt (Note: you may first need to run the command `conda init` and restart your shell):
 
 `conda activate pcrglobwb_python3`
 
