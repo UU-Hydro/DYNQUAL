@@ -54,8 +54,8 @@ Ensure the correct conda environment in a command prompt: `conda activate pcrglo
 
 Navigate to the main DynQual model directory (*DYNQUAL*). You can start a DynQual run using the following commands:
 
-For **online** run: `python DynQualModel/deterministic_runner.py ini/<ini_configuration_file>`
+For **online** run: `python DynQualModel/deterministic_runner.py <ini_configuration_file>`
 
-For **offline** run: `python DynQualModel/deterministic_runner_offline.py ini/<ini_configuration_file>`
+For **offline** run: `python DynQualModel/deterministic_runner_offline.py <ini_configuration_file>`
 
 where <ini_configuration_file> is your configuration file of DynQual.
