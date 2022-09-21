@@ -43,7 +43,9 @@ Some DynQual specific adjustments can also be made (e.g.):
 - `loadsPerSector =` : Set to TRUE for segregation of pollutant loadings per sector (i.e. for attribution), FALSE for combined loadings only. Note: TRUE is only avaliable for **online** DynQual runs.
 
 
-When adjusting input data files, remember to **check your units!**
+When adjusting input data files in your .ini file, remember to **check your units!**
+
+When adjusting which output data to report in your .ini file, remember to ensure you are **only reporting simulated variables!** 
 
 
 ## Running DynQual
