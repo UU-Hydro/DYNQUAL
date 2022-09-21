@@ -26,7 +26,7 @@ DynQual can be installed following similar steps as for PCR-GLOBWB2 (https://git
 
 For running DynQual, a configuration .ini file is required. In this file, you provide all the necessary information related to your run (e.g. time period, study extent, etc) and paths to your input data (e.g. climatological forcing, land cover, etc).
 
-Some example configuration .ini files are provided in the 'ini' directory, both for DynQual runs that are one-way coupled to PCR-GLOBWB2 ("Online") and for runs using hydrological input as a forcing ("Offline"). We provide all the required input data files for the Rhine-Meuse basin which can be downloaded to your local machine (~6GB), facilitating a self-contained example run (https://doi.org/10.5281/zenodo.7027242). Input data for DynQual runs at the global extent are availiable on the OPeNDAP server (**LINK**) - allowing for users to run DynQual for any land area **without** needing to download the input files (which exceed 250 GB).     
+Some example configuration .ini files are provided in the 'ini' directory, both for DynQual runs that are one-way coupled to PCR-GLOBWB2 ("Online") and for runs using hydrological input as a forcing ("Offline"). We provide all the required input data and .ini files for the Rhine-Meuse basin which can be downloaded to your local machine (~6GB), facilitating a self-contained example run (https://doi.org/10.5281/zenodo.7027242). Input data for DynQual runs at the global extent are availiable on the OPeNDAP server (**LINK**) - allowing for users to run DynQual for any land area **without** needing to download the input files (which exceed 250 GB).     
 
 Some adjustments must be made:
 - `inputDir =`  : this must be set to the directory where the input data is stored.
