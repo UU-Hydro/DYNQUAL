@@ -188,9 +188,9 @@ class Routing(object):
                                            (verticalSizeInMeter)**(2))\
                                                                 **(0.5) 
         nrCellsDownstream  = pcr.ldddist(self.lddMap,\
-                                         self.lddMap == 5,1.)
+                                         pcr.nominal(self.lddMap) == 5,1.)
         distanceDownstream = pcr.ldddist(self.lddMap,\
-                                         self.lddMap == 5,\
+                                         pcr.nominal(self.lddMap) == 5,\
                                          self.cellLengthFD)
         channelLengthDownstream = \
                 (self.cellLengthFD + distanceDownstream)/\
