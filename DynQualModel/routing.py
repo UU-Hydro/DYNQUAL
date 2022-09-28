@@ -359,7 +359,15 @@ class Routing(object):
             self.albedoWater= pcr.scalar(0.15) # albedo of water [-]
             self.albedoSnow= pcr.scalar(0.50) # albedo of snow and ice [-]         
             self.deltaTPrec= pcr.scalar(1.5) #-energy balance, proxy for temperature of groundwater store: mean annual temperature and reduction in the temperature for falling rain 
-            self.sunFracTBL= vos.getFullPath(iniItems.meteoOptions['sunhoursTable'], self.inputDir) #convert cloud cover to sunshine hours (Doornkamp & Pruitt)           
+
+            # - sunshine fraction table
+            if iniItems.meteoOptions['sunhoursTable'] != "Default":
+                self.sunFracTBL = vos.getFullPath(iniItems.meteoOptions['sunhoursTable'], self.inputDir) #convert cloud cover to sunshine hours (Doornkamp & Pruitt)
+            else:               
+                self.sunFracTBL = vos.getFullPath(os.path.abspath( __file__ ), "sunhoursfrac.tbl")
+                msg = "Using the default sunhoursfrac.tbl stored on " + self.sunFracTBL
+                logger.info(msg)
+
             self.radCon= 0.25
             self.radSlope= 0.50
             self.stefanBoltzman= 5.67e-8 # [W/m2/K]
