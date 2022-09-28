@@ -364,7 +364,7 @@ class Routing(object):
             if iniItems.meteoOptions['sunhoursTable'] != "Default":
                 self.sunFracTBL = vos.getFullPath(iniItems.meteoOptions['sunhoursTable'], self.inputDir) #convert cloud cover to sunshine hours (Doornkamp & Pruitt)
             else:               
-                self.sunFracTBL = vos.getFullPath(os.path.abspath(os.path.dirname( __file__ )), "sunhoursfrac.tbl")
+                self.sunFracTBL = vos.getFullPath("sunhoursfrac.tbl", os.path.abspath(os.path.dirname( __file__ )))
                 msg = "Using the default sunhoursfrac.tbl stored on " + self.sunFracTBL
                 logger.info(msg)
 
