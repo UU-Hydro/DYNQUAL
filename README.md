@@ -1,6 +1,6 @@
 # DynQual
 
-The dynamical water quality routing model (DynQual) is a large scale water quality model for simulating daily water temperature (Tw), total dissolved solids (TDS), biological oxygen demand (BOD) and fecal coliform (FC) at 5 arc-minute spatial resolution with a daily timestep. 
+The dynamical surface water quality model (DynQual) is a large scale water quality model for simulating daily water temperature (Tw), total dissolved solids (TDS), biological oxygen demand (BOD) and fecal coliform (FC) at 5 arc-minute spatial resolution with a daily timestep. 
 
 The model builds on the global hydrological model PCR-GLOBWB2 (Sutanudjaja et al., 2018; https://github.com/UU-Hydro/PCR-GLOBWB_model) and the water temperature model DynWat (Wanders et al., 2019; https://github.com/wande001/dynWat), allowing for both the quantification of pollutant emissions from different human water use activities and their subsequent routing through the surface water network. Water temperature is simulated by solving the surface water energy balance, while TDS, BOD and FC concentrations are simulated accounting for both the dilution capacity and in-stream decay processes.
 
