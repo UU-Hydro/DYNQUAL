@@ -2697,68 +2697,57 @@ class Routing(object):
 
     def qualityLocal(self, timeSec = vos.secondsPerDay()):
         
-        self.travel_time = 1 #model setup for daily timestep
-        
         ###Salinity load (conservative substances approach)
         #---TDS routing
-        self.routedTDS = self.routedTDS + self.TDSload 
+        self.routedTDS = self.routedTDS 
         
         if self.loadsPerSector:
-            self.routedDomTDS = self.routedDomTDS + self.Dom_TDSload
-            self.routedManTDS = self.routedManTDS + self.Man_TDSload
-            self.routedUSRTDS = self.routedUSRTDS + self.USR_TDSload
-            self.routedIrrTDS = self.routedIrrTDS + self.Irr_TDSload
+            self.routedDomTDS = self.routedDomTDS
+            self.routedManTDS = self.routedManTDS
+            self.routedUSRTDS = self.routedUSRTDS
+            self.routedIrrTDS = self.routedIrrTDS
         
         ###Organic load (non-conservative, temperature dependent decay)
-        self.routedBOD = self.routedBOD + self.BODload #get BOD load before decay
+        self.routedBOD = self.routedBOD #+ self.BODload #get BOD load before decay
+        
+        if self.loadsPerSector:
+            self.routedDomBOD = (self.routedDomBOD)
+            self.routedManBOD = (self.routedManBOD)
+            self.routedUSRBOD = (self.routedUSRBOD)
+            self.routedintLivBOD = (self.routedintLivBOD)
+            self.routedextLivBOD = (self.routedextLivBOD)
         
         #---Temperature dependent decay
         self.k_BOD = pcr.scalar(0.35)     #first-order degradation coefficient at 20C (van Vliet et al., 2021)
         self.watertempcorrection_BOD = pcr.scalar(1.047)     #temperature correction (van Vliet et al., 2021; Wen et al., 2017)
         self.waterTemp_BOD = self.waterTemp - pcr.scalar(273.15)   #water temperature in gridcell in C
-        BODdecay_temperature = cover(self.k_BOD*(self.watertempcorrection_BOD**(self.waterTemp_BOD - 20)),0.0)
-        self.BODdecay = exp(-(BODdecay_temperature)* self.travel_time)
-        
-        #---BOD routing
-        self.routedBOD = self.routedBOD * self.BODdecay # calculate BOD load after decay
-        
-        if self.loadsPerSector:
-            self.routedDomBOD = (self.routedDomBOD + self.Dom_BODload) * self.BODdecay
-            self.routedManBOD = (self.routedManBOD + self.Man_BODload) * self.BODdecay
-            self.routedUSRBOD = (self.routedUSRBOD + self.USR_BODload) * self.BODdecay
-            self.routedintLivBOD = (self.routedintLivBOD + self.intLiv_BODload) * self.BODdecay
-            self.routedextLivBOD = (self.routedextLivBOD + self.extLiv_BODload) * self.BODdecay
+        self.BODdecay_temperature = cover(self.k_BOD*(self.watertempcorrection_BOD**(self.waterTemp_BOD - 20)),0.0)
         
         ###Pathogen load (non-conservative, decay coefficient a function of temperature, solar radiation and sedimentation)
-        self.routedFC = self.routedFC + self.FCload #get FC load before decay
+        self.routedFC = self.routedFC #+ self.FCload #get FC load before decay
+        
+        if self.loadsPerSector:
+            self.routedDomFC = (self.routedDomFC)
+            self.routedManFC = (self.routedManFC)
+            self.routedUSRFC = (self.routedUSRFC)
+            self.routedintLivFC = (self.routedintLivFC)
+            self.routedextLivFC = (self.routedextLivFC)
               
         #---Temperature dependent decay
         self.waterTemp_FC = self.waterTemp - pcr.scalar(273.15)    #water temperature in gridcell in C
         self.darkinactivation_FC = pcr.scalar(0.82)     #days-1; Reder et al., (2015)
         self.watertempcorrection_FC = pcr.scalar(1.07)     #Reder et al., (2015)
-        FCdecay_temperature = cover(self.darkinactivation_FC * (self.watertempcorrection_FC**(self.waterTemp_FC - 20)),0.0)
+        self.FCdecay_temperature = cover(self.darkinactivation_FC * (self.watertempcorrection_FC**(self.waterTemp_FC - 20)),0.0)
         #---Solar radiation dependent decay
         self.water_height_pathogen = pcr.max(self.water_height, 0.1) #set minimum water depth of 0.1m for decay coefficients
         self.sunlightinactivation_FC = pcr.scalar(0.0068)     #m2 w-1     #Reder et al., (2015) 
         self.attenuation_FC = 0.0931 * self.tss + 0.881       #m-1; Reder et al., (2015)
         self.solarradiation_FC = self.rsw                     #w m-2
-        FCdecay_solarradiation = cover(self.sunlightinactivation_FC * (self.solarradiation_FC/ (self.attenuation_FC * self.water_height_pathogen))*(1-(exp(-(self.attenuation_FC * self.water_height_pathogen)))),0.0)
+        self.FCdecay_solarradiation = cover(self.sunlightinactivation_FC * (self.solarradiation_FC/ (self.attenuation_FC * self.water_height_pathogen))*(1-(exp(-(self.attenuation_FC * self.water_height_pathogen)))),0.0)
         #---Sedimentation
         self.threshold_FC_settlingdepth = pcr.scalar(0.5) #m ; stream depth must exceed 50cm in order for sedimentation to occur
         self.settlingvelocity_FC = pcr.scalar(1.656)    #m/day; Reder et al., (2015)
-        FCdecay_sedimentation = pcr.ifthenelse(self.water_height_pathogen > self.threshold_FC_settlingdepth, cover(self.settlingvelocity_FC / self.water_height,0.0), 0)  #day -1
-        #---Combine decay coefficients
-        self.FCdecay = exp(-(FCdecay_temperature + FCdecay_solarradiation + FCdecay_sedimentation)* self.travel_time)        
-        
-        #---FC routing
-        self.routedFC = self.routedFC * self.FCdecay #calculate FC load after decay
-        
-        if self.loadsPerSector:
-            self.routedDomFC = (self.routedDomFC + self.Dom_FCload) * self.FCdecay
-            self.routedManFC = (self.routedManFC + self.Man_FCload) * self.FCdecay
-            self.routedUSRFC = (self.routedUSRFC + self.USR_FCload) * self.FCdecay
-            self.routedintLivFC = (self.routedintLivFC + self.intLiv_FCload) * self.FCdecay
-            self.routedextLivFC = (self.routedextLivFC + self.extLiv_FCload) * self.FCdecay
+        self.FCdecay_sedimentation = pcr.ifthenelse(self.water_height_pathogen > self.threshold_FC_settlingdepth, cover(self.settlingvelocity_FC / self.water_height,0.0), 0)  #day -1
         
     def qualityRouting(self, timeSec):
         
@@ -2769,50 +2758,80 @@ class Routing(object):
         self.volumeEW = (self.volumeEW +pcr.upstream(self.lddMap,dtotEWLat)-dtotEWLat)
         
         #Salinity (TDS) routing
+        self.routedTDS = self.routedTDS + (self.TDSload *(timeSec/ vos.secondsPerDay()))
         dTDSLat = channelTransFrac*self.routedTDS
         self.routedTDS = (self.routedTDS +pcr.upstream(self.lddMap,dTDSLat)-dTDSLat)        
         
         if self.loadsPerSector:
+            self.routedDomTDS = self.routedDomTDS + (self.Dom_TDSload *(timeSec/ vos.secondsPerDay()))
             dDomTDSLat = channelTransFrac*self.routedDomTDS
             self.routedDomTDS = (self.routedDomTDS +pcr.upstream(self.lddMap,dDomTDSLat)-dDomTDSLat) 
+            
+            self.routedManTDS = self.routedManTDS + (self.Man_TDSload *(timeSec/ vos.secondsPerDay()))
             dManTDSLat = channelTransFrac*self.routedManTDS
             self.routedManTDS = (self.routedManTDS +pcr.upstream(self.lddMap,dManTDSLat)-dManTDSLat)
+            
+            self.routedUSRTDS = self.routedUSRTDS + (self.USR_TDSload *(timeSec/ vos.secondsPerDay()))
             dUSRTDSLat = channelTransFrac*self.routedUSRTDS
             self.routedUSRTDS = (self.routedUSRTDS +pcr.upstream(self.lddMap,dUSRTDSLat)-dUSRTDSLat)
+            
+            self.routedIrrTDS = self.routedIrrTDS + (self.Irr_TDSload *(timeSec/ vos.secondsPerDay()))
             dIrrTDSLat = channelTransFrac*self.routedIrrTDS
             self.routedIrrTDS = (self.routedIrrTDS +pcr.upstream(self.lddMap,dIrrTDSLat)-dIrrTDSLat)
-        
+
         #Organic (BOD) routing
+        self.routedBOD = self.routedBOD + (self.BODload *(timeSec/ vos.secondsPerDay()))
         dBODLat = channelTransFrac*self.routedBOD
-        self.routedBOD = (self.routedBOD +pcr.upstream(self.lddMap,dBODLat)-dBODLat)
+        self.BODdecay = exp(-(self.BODdecay_temperature)*(timeSec/ vos.secondsPerDay()))
+        self.routedBOD = (self.routedBOD +pcr.upstream(self.lddMap,dBODLat)-dBODLat) * self.BODdecay
         
         if self.loadsPerSector:          
+            self.routedDomBOD = self.routedDomBOD + (self.Dom_BODload *(timeSec/ vos.secondsPerDay()))
             dDomBODLat = channelTransFrac*self.routedDomBOD
-            self.routedDomBOD = (self.routedDomBOD +pcr.upstream(self.lddMap,dDomBODLat)-dDomBODLat) 
+            self.routedDomBOD = (self.routedDomBOD +pcr.upstream(self.lddMap,dDomBODLat)-dDomBODLat) * self.BODdecay
+            
+            self.routedManBOD = self.routedManBOD + (self.Man_BODload *(timeSec/ vos.secondsPerDay()))
             dManBODLat = channelTransFrac*self.routedManBOD
-            self.routedManBOD = (self.routedManBOD +pcr.upstream(self.lddMap,dManBODLat)-dManBODLat)
+            self.routedManBOD = (self.routedManBOD +pcr.upstream(self.lddMap,dManBODLat)-dManBODLat) * self.BODdecay
+            
+            self.routedUSRBOD = self.routedUSRBOD + (self.USR_BODload *(timeSec/ vos.secondsPerDay()))
             dUSRBODLat = channelTransFrac*self.routedUSRBOD
-            self.routedUSRBOD = (self.routedUSRBOD +pcr.upstream(self.lddMap,dUSRBODLat)-dUSRBODLat)
+            self.routedUSRBOD = (self.routedUSRBOD +pcr.upstream(self.lddMap,dUSRBODLat)-dUSRBODLat) * self.BODdecay
+            
+            self.routedintLivBOD = self.routedintLivBOD + (self.intLiv_BODload *(timeSec/ vos.secondsPerDay()))
             dintLivBODLat = channelTransFrac*self.routedintLivBOD
-            self.routedintLivBOD = (self.routedintLivBOD +pcr.upstream(self.lddMap,dintLivBODLat)-dintLivBODLat)
+            self.routedintLivBOD = (self.routedintLivBOD +pcr.upstream(self.lddMap,dintLivBODLat)-dintLivBODLat) * self.BODdecay
+            
+            self.routedextLivBOD = self.routedextLivBOD + (self.extLiv_BODload *(timeSec/ vos.secondsPerDay()))
             dextLivBODLat = channelTransFrac*self.routedextLivBOD
-            self.routedextLivBOD = (self.routedextLivBOD +pcr.upstream(self.lddMap,dextLivBODLat)-dextLivBODLat)
+            self.routedextLivBOD = (self.routedextLivBOD +pcr.upstream(self.lddMap,dextLivBODLat)-dextLivBODLat) * self.BODdecay
      
         #Pathogen (FC) routing
+        self.routedFC = self.routedFC + (self.FCload *(timeSec/ vos.secondsPerDay()))
         dFCLat = channelTransFrac*self.routedFC
-        self.routedFC = (self.routedFC +pcr.upstream(self.lddMap,dFCLat)-dFCLat)
+        self.FCdecay = exp(-(self.FCdecay_temperature + self.FCdecay_solarradiation + self.FCdecay_sedimentation)*(timeSec/ vos.secondsPerDay()))
+        self.routedFC = (self.routedFC +pcr.upstream(self.lddMap,dFCLat)-dFCLat) * self.FCdecay
 
         if self.loadsPerSector:          
+            self.routedDomFC = self.routedDomFC + (self.Dom_FCload *(timeSec/ vos.secondsPerDay()))
             dDomFCLat = channelTransFrac*self.routedDomFC
-            self.routedDomFC = (self.routedDomFC +pcr.upstream(self.lddMap,dDomFCLat)-dDomFCLat) 
+            self.routedDomFC = (self.routedDomFC +pcr.upstream(self.lddMap,dDomFCLat)-dDomFCLat) * self.FCdecay
+            
+            self.routedManFC = self.routedManFC + (self.Man_FCload *(timeSec/ vos.secondsPerDay()))
             dManFCLat = channelTransFrac*self.routedManFC
-            self.routedManFC = (self.routedManFC +pcr.upstream(self.lddMap,dManFCLat)-dManFCLat)
+            self.routedManFC = (self.routedManFC +pcr.upstream(self.lddMap,dManFCLat)-dManFCLat) * self.FCdecay
+            
+            self.routedUSRFC = self.routedUSRFC + (self.USR_FCload *(timeSec/ vos.secondsPerDay()))
             dUSRFCLat = channelTransFrac*self.routedUSRFC
-            self.routedUSRFC = (self.routedUSRFC +pcr.upstream(self.lddMap,dUSRFCLat)-dUSRFCLat)
+            self.routedUSRFC = (self.routedUSRFC +pcr.upstream(self.lddMap,dUSRFCLat)-dUSRFCLat) * self.FCdecay
+            
+            self.routedintLivFC = self.routedintLivFC + (self.intLiv_FCload *(timeSec/ vos.secondsPerDay()))
             dintLivFCLat = channelTransFrac*self.routedintLivFC
-            self.routedintLivFC = (self.routedintLivFC +pcr.upstream(self.lddMap,dintLivFCLat)-dintLivFCLat)
+            self.routedintLivFC = (self.routedintLivFC +pcr.upstream(self.lddMap,dintLivFCLat)-dintLivFCLat) * self.FCdecay
+            
+            self.routedextLivFC = self.routedextLivFC + (self.extLiv_FCload *(timeSec/ vos.secondsPerDay()))
             dextLivFCLat = channelTransFrac*self.routedextLivFC
-            self.routedextLivFC = (self.routedextLivFC +pcr.upstream(self.lddMap,dextLivFCLat)-dextLivFCLat)
+            self.routedextLivFC = (self.routedextLivFC +pcr.upstream(self.lddMap,dextLivFCLat)-dextLivFCLat) * self.FCdecay
 
     def energyWaterBody(self):
         lakeTransFrac = pcr.max(pcr.min((self.WaterBodies.waterBodyOutflow) / (self.waterBodyStorageTimeBefore), 1.0),0.0)
