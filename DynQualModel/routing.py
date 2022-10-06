@@ -2708,7 +2708,7 @@ class Routing(object):
             self.routedIrrTDS = self.routedIrrTDS
         
         ###Organic load (non-conservative, temperature dependent decay)
-        self.routedBOD = self.routedBOD #+ self.BODload #get BOD load before decay
+        self.routedBOD = self.routedBOD
         
         if self.loadsPerSector:
             self.routedDomBOD = (self.routedDomBOD)
@@ -2724,7 +2724,7 @@ class Routing(object):
         self.BODdecay_temperature = cover(self.k_BOD*(self.watertempcorrection_BOD**(self.waterTemp_BOD - 20)),0.0)
         
         ###Pathogen load (non-conservative, decay coefficient a function of temperature, solar radiation and sedimentation)
-        self.routedFC = self.routedFC #+ self.FCload #get FC load before decay
+        self.routedFC = self.routedFC
         
         if self.loadsPerSector:
             self.routedDomFC = (self.routedDomFC)
