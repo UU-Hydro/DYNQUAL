@@ -42,4 +42,4 @@ cd $HOME/DYNQUAL/DynQualModel/
 
 
 # global online run with parallelization
-python parallel_pcrglobwb_runner.py $HOME/ini/global_run/DynQual_05min_global.ini
+python parallel_pcrglobwb_runner.py $HOME/DYNQUAL/ini/global_run/DynQual_05min_global.ini
