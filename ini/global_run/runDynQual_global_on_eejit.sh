@@ -25,6 +25,13 @@
 #~ #SBATCH --mail-user=XXXX@gmail.com
 
 
+# please set where you stored DYNQUAL scripts
+SCRIPT_FOLDER=$HOME/DYNQUAL/DynQualModel/
+
+# please 
+INI_FILE=$HOME/DYNQUAL/ini/global_run/DynQual_05min_global.ini
+# - Note that I noticed that Edward still use quite old parameter files from PCR-GLOBWB. Shall we update this? If yes, I'll allocate some hours around next week. 
+
 # we activate the correct conda environment on eejit and many other settings
 # - abandon any existing PYTHONPATH (recommended, if you want to use miniconda or anaconda)
 unset PYTHONPATH
@@ -38,8 +45,7 @@ source activate /quanta1/home/sutan101/opt/miniconda3/envs/pcrglobwb_python3_202
 
 
 # we go to the folder where the folder script
-cd $HOME/DYNQUAL/DynQualModel/
-
+cd ${SCRIPT_FOLDER}
 
 # global online run with parallelization
-python parallel_pcrglobwb_runner.py $HOME/DYNQUAL/ini/global_run/DynQual_05min_global.ini
+python parallel_pcrglobwb_runner.py ${INI_FILE}
