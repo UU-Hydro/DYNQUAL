@@ -5,7 +5,7 @@ The dynamical surface water quality model (DynQual) is a large scale water quali
 The model builds on the global hydrological model PCR-GLOBWB2 (Sutanudjaja et al., 2018; https://github.com/UU-Hydro/PCR-GLOBWB_model) and the water temperature model DynWat (Wanders et al., 2019; https://github.com/wande001/dynWat), allowing for both the quantification of pollutant emissions from different human water use activities and their subsequent routing through the surface water network. Water temperature is simulated by solving the surface water energy balance, while TDS, BOD and FC concentrations are simulated accounting for both the dilution capacity and in-stream decay processes.
 
 We offer two options for running DynQual:
-1)	One-way coupled with PCR-GLOBWB2; or
+1)	Coupled with PCR-GLOBWB2; or
 2)	In a stand-alone configuration with user-defined hydrological input from any land surface or hydrological model (i.e. surface runoff, interflow and baseflow).
 
 In both model configurations, pollutant loadings can be prescribed directly (akin to a forcing). Alternatively, when running DynQual coupled with PCR-GLOBWB2, pollutant loadings can be simulated within the model runs by providing additional socio-economic input data.
