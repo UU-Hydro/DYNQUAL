@@ -422,7 +422,7 @@ class Reporting(object):
         # Aspects related to pathogen pollution
         self.FCload = self._model.routing.FCload #in million cfu
         self.routedFC = self._model.routing.routedFC #in million cfu
-        self.pathogen = pcr.ifthenelse(self.channelStorage_Qthres != vos.MV, self._model.routing.routedFC / self.channelStorage_Qthres, 0.) # in cfu/100ml
+        self.pathogen = pcr.ifthenelse(self.channelStorage_Qthres != vos.MV, self._model.routing.routedFC * 100 / self.channelStorage_Qthres, 0.) # in cfu/100ml
 
         if self.loadsPerSector  == "True":            
             #-FC

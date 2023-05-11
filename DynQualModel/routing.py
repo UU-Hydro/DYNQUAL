@@ -69,21 +69,21 @@ class Routing(object):
                 #Domestic sector
                 result['routedDomTDS']               = self.routedDomTDS                   #  g TDS
                 result['routedDomBOD']               = self.routedDomBOD                   #  g BOD 
-                result['routedDomFC']                = self.routedDomFC                    #  cfu   
+                result['routedDomFC']                = self.routedDomFC                    #  10^6 cfu   
                 #Manufacturing sector
                 result['routedManTDS']               = self.routedManTDS                   #  g TDS
                 result['routedManBOD']               = self.routedManBOD                   #  g BOD 
-                result['routedManFC']                = self.routedManFC                    #  cfu
+                result['routedManFC']                = self.routedManFC                    #  10^6 cfu
                 #Urban surface runoff
                 result['routedUSRTDS']               = self.routedUSRTDS                   #  g TDS
                 result['routedUSRBOD']               = self.routedUSRBOD                   #  g BOD 
-                result['routedUSRFC']                = self.routedUSRFC                    #  cfu
+                result['routedUSRFC']                = self.routedUSRFC                    #  10^6 cfu
                 #Intensive livestock
                 result['routedintLivBOD']            = self.routedintLivBOD                #  g BOD 
-                result['routedintLivFC']             = self.routedintLivFC                 #  cfu
+                result['routedintLivFC']             = self.routedintLivFC                 #  10^6 cfu
                 #Extensive livestock
                 result['routedextLivBOD']            = self.routedextLivBOD                #  g BOD 
-                result['routedextLivFC']             = self.routedextLivFC                 #  cfu
+                result['routedextLivFC']             = self.routedextLivFC                 #  10^6 cfu
                 #Irrigation
                 result['routedIrrTDS']               = self.routedIrrTDS                   #  g TDS
             except:
@@ -474,25 +474,25 @@ class Routing(object):
                                                     
                 #Wastewater pathways and removal efficiencies (treatment [tertiary, secondary, primary], collected but untreated, basic sanitation, open defecation, direct)
                 self.WWtPathwaysNC = vos.getFullPath(iniItems.routingOptions["WWtPathwaysNC"], self.inputDir)
-                self.TDS_Ter_RemEff = pcr.scalar(0.)
-                self.TDS_Sec_RemEff = pcr.scalar(0.)
-                self.TDS_Pri_RemEff = pcr.scalar(0.)
-                self.TDS_WWcut_RemEff = pcr.scalar(0.)
+                self.TDS_Ter_RemEff = pcr.scalar(0.) #removal of TDS by tertiary treatment
+                self.TDS_Sec_RemEff = pcr.scalar(0.) #removal of TDS by secondary treatment
+                self.TDS_Pri_RemEff = pcr.scalar(0.) #removal of TDS by primary treatment
+                self.TDS_WWcut_RemEff = pcr.scalar(0.) 
                 self.TDS_dom_WWbs_RemEff = pcr.scalar(0.)
                 self.TDS_dom_WWod_RemEff = pcr.scalar(0.)
-                self.TDS_man_WWdirect_RemEff = pcr.scalar(0.)
+                self.TDS_man_WWdirect_RemEff = pcr.scalar(0.) 
                   
-                self.BOD_Ter_RemEff = pcr.scalar(0.99)
-                self.BOD_Sec_RemEff = pcr.scalar(0.85)
-                self.BOD_Pri_RemEff = pcr.scalar(0.25)
+                self.BOD_Ter_RemEff = pcr.scalar(0.99) #removal of BOD by tertiary treatment
+                self.BOD_Sec_RemEff = pcr.scalar(0.85) #removal of BOD by secondary treatment
+                self.BOD_Pri_RemEff = pcr.scalar(0.25) #removal of BOD by primary treatment
                 self.BOD_WWcut_RemEff = pcr.scalar(0.)
                 self.BOD_dom_WWbs_RemEff = pcr.scalar(0.)
                 self.BOD_dom_WWod_RemEff = pcr.scalar(0.)
                 self.BOD_man_WWdirect_RemEff = pcr.scalar(0.)
                   
-                self.FC_Ter_RemEff = pcr.scalar(0.9999)
-                self.FC_Sec_RemEff = pcr.scalar(0.9745)
-                self.FC_Pri_RemEff = pcr.scalar(0.4279)
+                self.FC_Ter_RemEff = pcr.scalar(0.9999) #removal of FC by tertiary treatment
+                self.FC_Sec_RemEff = pcr.scalar(0.9745) #removal of FC by secondary treatment
+                self.FC_Pri_RemEff = pcr.scalar(0.4279) #removal of FC by primary treatment
                 self.FC_dom_WWbs_RemEff = pcr.scalar(0.)
                 self.FC_WWcut_RemEff = pcr.scalar(0.)
                 self.FC_dom_WWod_RemEff = pcr.scalar(0.)
