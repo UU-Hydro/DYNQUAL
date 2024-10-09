@@ -69,21 +69,21 @@ class Routing(object):
                 #Domestic sector
                 result['routedDomTDS']               = self.routedDomTDS                   #  g TDS
                 result['routedDomBOD']               = self.routedDomBOD                   #  g BOD 
-                result['routedDomFC']                = self.routedDomFC                    #  10^6 cfu   
+                result['routedDomFC']                = self.routedDomFC                    #  cfu   
                 #Manufacturing sector
                 result['routedManTDS']               = self.routedManTDS                   #  g TDS
                 result['routedManBOD']               = self.routedManBOD                   #  g BOD 
-                result['routedManFC']                = self.routedManFC                    #  10^6 cfu
+                result['routedManFC']                = self.routedManFC                    #  cfu
                 #Urban surface runoff
                 result['routedUSRTDS']               = self.routedUSRTDS                   #  g TDS
                 result['routedUSRBOD']               = self.routedUSRBOD                   #  g BOD 
-                result['routedUSRFC']                = self.routedUSRFC                    #  10^6 cfu
+                result['routedUSRFC']                = self.routedUSRFC                    #  cfu
                 #Intensive livestock
                 result['routedintLivBOD']            = self.routedintLivBOD                #  g BOD 
-                result['routedintLivFC']             = self.routedintLivFC                 #  10^6 cfu
+                result['routedintLivFC']             = self.routedintLivFC                 #  cfu
                 #Extensive livestock
                 result['routedextLivBOD']            = self.routedextLivBOD                #  g BOD 
-                result['routedextLivFC']             = self.routedextLivFC                 #  10^6 cfu
+                result['routedextLivFC']             = self.routedextLivFC                 #  cfu
                 #Irrigation
                 result['routedIrrTDS']               = self.routedIrrTDS                   #  g TDS
             except:
@@ -102,7 +102,10 @@ class Routing(object):
         self.cloneMap = iniItems.cloneMap
         self.tmpDir = iniItems.tmpDir
         self.inputDir = iniItems.globalOptions['inputDir']
-
+       
+        self.elevation_path = vos.getFullPath(iniItems.landSurfaceOptions['topographyNC'],self.inputDir)
+        self.elevation = vos.netcdf2PCRobjCloneWithoutTime(self.elevation_path,'dem_average', self.cloneMap, True, None, self.inputDir)  
+                     
         # option to activate water balance check
         self.debugWaterBalance = True
         if iniItems.routingOptions['debugWaterBalance'] == "False":
@@ -474,25 +477,25 @@ class Routing(object):
                                                     
                 #Wastewater pathways and removal efficiencies (treatment [tertiary, secondary, primary], collected but untreated, basic sanitation, open defecation, direct)
                 self.WWtPathwaysNC = vos.getFullPath(iniItems.routingOptions["WWtPathwaysNC"], self.inputDir)
-                self.TDS_Ter_RemEff = pcr.scalar(0.) #removal of TDS by tertiary treatment
-                self.TDS_Sec_RemEff = pcr.scalar(0.) #removal of TDS by secondary treatment
-                self.TDS_Pri_RemEff = pcr.scalar(0.) #removal of TDS by primary treatment
-                self.TDS_WWcut_RemEff = pcr.scalar(0.) 
+                self.TDS_Ter_RemEff = pcr.scalar(0.)
+                self.TDS_Sec_RemEff = pcr.scalar(0.)
+                self.TDS_Pri_RemEff = pcr.scalar(0.)
+                self.TDS_WWcut_RemEff = pcr.scalar(0.)
                 self.TDS_dom_WWbs_RemEff = pcr.scalar(0.)
                 self.TDS_dom_WWod_RemEff = pcr.scalar(0.)
-                self.TDS_man_WWdirect_RemEff = pcr.scalar(0.) 
+                self.TDS_man_WWdirect_RemEff = pcr.scalar(0.)
                   
-                self.BOD_Ter_RemEff = pcr.scalar(0.99) #removal of BOD by tertiary treatment
-                self.BOD_Sec_RemEff = pcr.scalar(0.85) #removal of BOD by secondary treatment
-                self.BOD_Pri_RemEff = pcr.scalar(0.25) #removal of BOD by primary treatment
+                self.BOD_Ter_RemEff = pcr.scalar(0.99)
+                self.BOD_Sec_RemEff = pcr.scalar(0.85)
+                self.BOD_Pri_RemEff = pcr.scalar(0.25)
                 self.BOD_WWcut_RemEff = pcr.scalar(0.)
                 self.BOD_dom_WWbs_RemEff = pcr.scalar(0.)
                 self.BOD_dom_WWod_RemEff = pcr.scalar(0.)
                 self.BOD_man_WWdirect_RemEff = pcr.scalar(0.)
                   
-                self.FC_Ter_RemEff = pcr.scalar(0.9999) #removal of FC by tertiary treatment
-                self.FC_Sec_RemEff = pcr.scalar(0.9745) #removal of FC by secondary treatment
-                self.FC_Pri_RemEff = pcr.scalar(0.4279) #removal of FC by primary treatment
+                self.FC_Ter_RemEff = pcr.scalar(0.9999)
+                self.FC_Sec_RemEff = pcr.scalar(0.9745)
+                self.FC_Pri_RemEff = pcr.scalar(0.4279)
                 self.FC_dom_WWbs_RemEff = pcr.scalar(0.)
                 self.FC_WWcut_RemEff = pcr.scalar(0.)
                 self.FC_dom_WWod_RemEff = pcr.scalar(0.)
@@ -529,6 +532,7 @@ class Routing(object):
             # Initial conditions needed for water quality module
             if self.quality:
                 self.waterTemp    = vos.readPCRmapClone(iniItems.routingOptions['waterTemperatureIni'],self.cloneMap,self.tmpDir,self.inputDir)
+                self.DO = (1-0.0001148*self.elevation)*exp(-139.34411+(157570.1)/(self.waterTemp)-(66423080)/(self.waterTemp**2)+(12438000000)/(self.waterTemp**3)-(862194900000)/(self.waterTemp**4))
                 self.iceThickness   = vos.readPCRmapClone(iniItems.routingOptions['iceThicknessIni'],self.cloneMap,self.tmpDir,self.inputDir)
                 self.routedTDS = vos.readPCRmapClone(iniItems.routingOptions['routedTDSIni'],self.cloneMap,self.tmpDir,self.inputDir) #initial conditions for salinity pollution
                 self.routedBOD = vos.readPCRmapClone(iniItems.routingOptions['routedBODIni'],self.cloneMap,self.tmpDir,self.inputDir) #initial conditions for organic pollution
@@ -2695,27 +2699,23 @@ class Routing(object):
         #self.waterTemp= pcr.ifthenelse(self.waterTemp < self.iceThresTemp+0.1,self.iceThresTemp+0.1,self.waterTemp)
         self.waterTemp= min(pcr.ifthenelse(self.waterTemp < self.iceThresTemp+0.1,self.iceThresTemp+0.1,self.waterTemp), self.maxThresTemp)  
 
-    def qualityLocal(self, timeSec = vos.secondsPerDay()):
+
+    def qualityLocal(self, timeSec = vos.secondsPerDay()): 
+        
+        self.travel_time = 1 #model setup for daily timestep
         
         ###Salinity load (conservative substances approach)
         #---TDS routing
-        self.routedTDS = self.routedTDS 
+        self.routedTDS = self.routedTDS + self.TDSload 
         
         if self.loadsPerSector:
-            self.routedDomTDS = self.routedDomTDS
-            self.routedManTDS = self.routedManTDS
-            self.routedUSRTDS = self.routedUSRTDS
-            self.routedIrrTDS = self.routedIrrTDS
+            self.routedDomTDS = self.routedDomTDS + self.Dom_TDSload
+            self.routedManTDS = self.routedManTDS + self.Man_TDSload
+            self.routedUSRTDS = self.routedUSRTDS + self.USR_TDSload
+            self.routedIrrTDS = self.routedIrrTDS + self.Irr_TDSload
         
         ###Organic load (non-conservative, temperature dependent decay)
-        self.routedBOD = self.routedBOD
-        
-        if self.loadsPerSector:
-            self.routedDomBOD = (self.routedDomBOD)
-            self.routedManBOD = (self.routedManBOD)
-            self.routedUSRBOD = (self.routedUSRBOD)
-            self.routedintLivBOD = (self.routedintLivBOD)
-            self.routedextLivBOD = (self.routedextLivBOD)
+        self.routedBOD = self.routedBOD + self.BODload #get BOD load before decay
         
         #---Temperature dependent decay
         self.k_BOD = pcr.scalar(0.35)     #first-order degradation coefficient at 20C (van Vliet et al., 2021)
@@ -2723,32 +2723,59 @@ class Routing(object):
         self.waterTemp_BOD = self.waterTemp - pcr.scalar(273.15)   #water temperature in gridcell in C
         self.BODdecay_temperature = cover(self.k_BOD*(self.watertempcorrection_BOD**(self.waterTemp_BOD - 20)),0.0)
         
-        ###Pathogen load (non-conservative, decay coefficient a function of temperature, solar radiation and sedimentation)
-        self.routedFC = self.routedFC
+        #---Streeter-Phelps (Dissolved oxygen)
+        self.BOD_conc = pcr.ifthenelse(self.channelStorage > 0, self.routedBOD / self.channelStorage, 0)  # BOD concentration in mg/l
+        self.k1_BOD = self.BODdecay_temperature * self.BOD_conc
+        self.DOsat = (1-0.0001148*self.elevation)*exp(-139.34411+(157570.1)/(self.waterTemp)-(66423080)/(self.waterTemp**2)+(12438000000)/(self.waterTemp**3)-(862194900000)/(self.waterTemp**4)) # oxygen saturation in mg/l
+        self.velocity = self.avgDischarge / (self.yMean * self.wMean) # velocity assuming rectangular channel (m/s)
+        self.k2 = 3.93 * ((self.velocity**0.5) / (self.yMean**1.5)) # reaeration rate in /d (O'Connor and Dobbins, 1958)
+        self.k2 = pcr.ifthenelse(self.k2 > 1.5, 1.5, self.k2)
+        self.k2 = pcr.ifthenelse(self.k2 < 0.4, 0.4, self.k2)
+        self.DO = self.DO - self.k1_BOD + self.k2*(self.DOsat - self.DO) # DO concentration in mg/l
+        self.DO = pcr.ifthenelse(self.DO < 0.0, 0.0, self.DO) # non-negative DO
         
+        #---BOD routing
+        self.BODdecay = exp(-self.BODdecay_temperature * self.travel_time) # /d
+        self.routedBOD = self.routedBOD * self.BODdecay # calculate BOD load after decay (in grams)
+                
         if self.loadsPerSector:
-            self.routedDomFC = (self.routedDomFC)
-            self.routedManFC = (self.routedManFC)
-            self.routedUSRFC = (self.routedUSRFC)
-            self.routedintLivFC = (self.routedintLivFC)
-            self.routedextLivFC = (self.routedextLivFC)
+            self.routedDomBOD = (self.routedDomBOD + self.Dom_BODload) * self.BODdecay
+            self.routedManBOD = (self.routedManBOD + self.Man_BODload) * self.BODdecay
+            self.routedUSRBOD = (self.routedUSRBOD + self.USR_BODload) * self.BODdecay
+            self.routedintLivBOD = (self.routedintLivBOD + self.intLiv_BODload) * self.BODdecay
+            self.routedextLivBOD = (self.routedextLivBOD + self.extLiv_BODload) * self.BODdecay
+        
+        ###Pathogen load (non-conservative, decay coefficient a function of temperature, solar radiation and sedimentation)
+        self.routedFC = self.routedFC + self.FCload #get FC load before decay
               
         #---Temperature dependent decay
         self.waterTemp_FC = self.waterTemp - pcr.scalar(273.15)    #water temperature in gridcell in C
         self.darkinactivation_FC = pcr.scalar(0.82)     #days-1; Reder et al., (2015)
         self.watertempcorrection_FC = pcr.scalar(1.07)     #Reder et al., (2015)
-        self.FCdecay_temperature = cover(self.darkinactivation_FC * (self.watertempcorrection_FC**(self.waterTemp_FC - 20)),0.0)
+        FCdecay_temperature = cover(self.darkinactivation_FC * (self.watertempcorrection_FC**(self.waterTemp_FC - 20)),0.0)
         #---Solar radiation dependent decay
         self.water_height_pathogen = pcr.max(self.water_height, 0.1) #set minimum water depth of 0.1m for decay coefficients
         self.sunlightinactivation_FC = pcr.scalar(0.0068)     #m2 w-1     #Reder et al., (2015) 
         self.attenuation_FC = 0.0931 * self.tss + 0.881       #m-1; Reder et al., (2015)
         self.solarradiation_FC = self.rsw                     #w m-2
-        self.FCdecay_solarradiation = cover(self.sunlightinactivation_FC * (self.solarradiation_FC/ (self.attenuation_FC * self.water_height_pathogen))*(1-(exp(-(self.attenuation_FC * self.water_height_pathogen)))),0.0)
+        FCdecay_solarradiation = cover(self.sunlightinactivation_FC * (self.solarradiation_FC/ (self.attenuation_FC * self.water_height_pathogen))*(1-(exp(-(self.attenuation_FC * self.water_height_pathogen)))),0.0)
         #---Sedimentation
         self.threshold_FC_settlingdepth = pcr.scalar(0.5) #m ; stream depth must exceed 50cm in order for sedimentation to occur
         self.settlingvelocity_FC = pcr.scalar(1.656)    #m/day; Reder et al., (2015)
-        self.FCdecay_sedimentation = pcr.ifthenelse(self.water_height_pathogen > self.threshold_FC_settlingdepth, cover(self.settlingvelocity_FC / self.water_height,0.0), 0)  #day -1
+        FCdecay_sedimentation = pcr.ifthenelse(self.water_height_pathogen > self.threshold_FC_settlingdepth, cover(self.settlingvelocity_FC / self.water_height,0.0), 0)  #day -1
+        #---Combine decay coefficients
+        self.FCdecay = exp(-(FCdecay_temperature + FCdecay_solarradiation + FCdecay_sedimentation)* self.travel_time)        
         
+        #---FC routing
+        self.routedFC = self.routedFC * self.FCdecay #calculate FC load after decay
+        
+        if self.loadsPerSector:
+            self.routedDomFC = (self.routedDomFC + self.Dom_FCload) * self.FCdecay
+            self.routedManFC = (self.routedManFC + self.Man_FCload) * self.FCdecay
+            self.routedUSRFC = (self.routedUSRFC + self.USR_FCload) * self.FCdecay
+            self.routedintLivFC = (self.routedintLivFC + self.intLiv_FCload) * self.FCdecay
+            self.routedextLivFC = (self.routedextLivFC + self.extLiv_FCload) * self.FCdecay 
+            
     def qualityRouting(self, timeSec):
         
         channelTransFrac = cover(pcr.max(pcr.min((self.subDischarge * timeSec) / self.channelStorageTimeBefore, 1.0),0.0), 0.0)
@@ -2758,80 +2785,50 @@ class Routing(object):
         self.volumeEW = (self.volumeEW +pcr.upstream(self.lddMap,dtotEWLat)-dtotEWLat)
         
         #Salinity (TDS) routing
-        self.routedTDS = self.routedTDS + (self.TDSload *(timeSec/ vos.secondsPerDay()))
         dTDSLat = channelTransFrac*self.routedTDS
         self.routedTDS = (self.routedTDS +pcr.upstream(self.lddMap,dTDSLat)-dTDSLat)        
         
         if self.loadsPerSector:
-            self.routedDomTDS = self.routedDomTDS + (self.Dom_TDSload *(timeSec/ vos.secondsPerDay()))
             dDomTDSLat = channelTransFrac*self.routedDomTDS
             self.routedDomTDS = (self.routedDomTDS +pcr.upstream(self.lddMap,dDomTDSLat)-dDomTDSLat) 
-            
-            self.routedManTDS = self.routedManTDS + (self.Man_TDSload *(timeSec/ vos.secondsPerDay()))
             dManTDSLat = channelTransFrac*self.routedManTDS
             self.routedManTDS = (self.routedManTDS +pcr.upstream(self.lddMap,dManTDSLat)-dManTDSLat)
-            
-            self.routedUSRTDS = self.routedUSRTDS + (self.USR_TDSload *(timeSec/ vos.secondsPerDay()))
             dUSRTDSLat = channelTransFrac*self.routedUSRTDS
             self.routedUSRTDS = (self.routedUSRTDS +pcr.upstream(self.lddMap,dUSRTDSLat)-dUSRTDSLat)
-            
-            self.routedIrrTDS = self.routedIrrTDS + (self.Irr_TDSload *(timeSec/ vos.secondsPerDay()))
             dIrrTDSLat = channelTransFrac*self.routedIrrTDS
             self.routedIrrTDS = (self.routedIrrTDS +pcr.upstream(self.lddMap,dIrrTDSLat)-dIrrTDSLat)
-
+        
         #Organic (BOD) routing
-        self.routedBOD = self.routedBOD + (self.BODload *(timeSec/ vos.secondsPerDay()))
         dBODLat = channelTransFrac*self.routedBOD
-        self.BODdecay = exp(-(self.BODdecay_temperature)*(timeSec/ vos.secondsPerDay()))
-        self.routedBOD = (self.routedBOD +pcr.upstream(self.lddMap,dBODLat)-dBODLat) * self.BODdecay
+        self.routedBOD = (self.routedBOD +pcr.upstream(self.lddMap,dBODLat)-dBODLat)
         
         if self.loadsPerSector:          
-            self.routedDomBOD = self.routedDomBOD + (self.Dom_BODload *(timeSec/ vos.secondsPerDay()))
             dDomBODLat = channelTransFrac*self.routedDomBOD
-            self.routedDomBOD = (self.routedDomBOD +pcr.upstream(self.lddMap,dDomBODLat)-dDomBODLat) * self.BODdecay
-            
-            self.routedManBOD = self.routedManBOD + (self.Man_BODload *(timeSec/ vos.secondsPerDay()))
+            self.routedDomBOD = (self.routedDomBOD +pcr.upstream(self.lddMap,dDomBODLat)-dDomBODLat) 
             dManBODLat = channelTransFrac*self.routedManBOD
-            self.routedManBOD = (self.routedManBOD +pcr.upstream(self.lddMap,dManBODLat)-dManBODLat) * self.BODdecay
-            
-            self.routedUSRBOD = self.routedUSRBOD + (self.USR_BODload *(timeSec/ vos.secondsPerDay()))
+            self.routedManBOD = (self.routedManBOD +pcr.upstream(self.lddMap,dManBODLat)-dManBODLat)
             dUSRBODLat = channelTransFrac*self.routedUSRBOD
-            self.routedUSRBOD = (self.routedUSRBOD +pcr.upstream(self.lddMap,dUSRBODLat)-dUSRBODLat) * self.BODdecay
-            
-            self.routedintLivBOD = self.routedintLivBOD + (self.intLiv_BODload *(timeSec/ vos.secondsPerDay()))
+            self.routedUSRBOD = (self.routedUSRBOD +pcr.upstream(self.lddMap,dUSRBODLat)-dUSRBODLat)
             dintLivBODLat = channelTransFrac*self.routedintLivBOD
-            self.routedintLivBOD = (self.routedintLivBOD +pcr.upstream(self.lddMap,dintLivBODLat)-dintLivBODLat) * self.BODdecay
-            
-            self.routedextLivBOD = self.routedextLivBOD + (self.extLiv_BODload *(timeSec/ vos.secondsPerDay()))
+            self.routedintLivBOD = (self.routedintLivBOD +pcr.upstream(self.lddMap,dintLivBODLat)-dintLivBODLat)
             dextLivBODLat = channelTransFrac*self.routedextLivBOD
-            self.routedextLivBOD = (self.routedextLivBOD +pcr.upstream(self.lddMap,dextLivBODLat)-dextLivBODLat) * self.BODdecay
-     
+            self.routedextLivBOD = (self.routedextLivBOD +pcr.upstream(self.lddMap,dextLivBODLat)-dextLivBODLat)
+        
         #Pathogen (FC) routing
-        self.routedFC = self.routedFC + (self.FCload *(timeSec/ vos.secondsPerDay()))
         dFCLat = channelTransFrac*self.routedFC
-        self.FCdecay = exp(-(self.FCdecay_temperature + self.FCdecay_solarradiation + self.FCdecay_sedimentation)*(timeSec/ vos.secondsPerDay()))
-        self.routedFC = (self.routedFC +pcr.upstream(self.lddMap,dFCLat)-dFCLat) * self.FCdecay
+        self.routedFC = (self.routedFC +pcr.upstream(self.lddMap,dFCLat)-dFCLat)
 
         if self.loadsPerSector:          
-            self.routedDomFC = self.routedDomFC + (self.Dom_FCload *(timeSec/ vos.secondsPerDay()))
             dDomFCLat = channelTransFrac*self.routedDomFC
-            self.routedDomFC = (self.routedDomFC +pcr.upstream(self.lddMap,dDomFCLat)-dDomFCLat) * self.FCdecay
-            
-            self.routedManFC = self.routedManFC + (self.Man_FCload *(timeSec/ vos.secondsPerDay()))
+            self.routedDomFC = (self.routedDomFC +pcr.upstream(self.lddMap,dDomFCLat)-dDomFCLat) 
             dManFCLat = channelTransFrac*self.routedManFC
-            self.routedManFC = (self.routedManFC +pcr.upstream(self.lddMap,dManFCLat)-dManFCLat) * self.FCdecay
-            
-            self.routedUSRFC = self.routedUSRFC + (self.USR_FCload *(timeSec/ vos.secondsPerDay()))
+            self.routedManFC = (self.routedManFC +pcr.upstream(self.lddMap,dManFCLat)-dManFCLat)
             dUSRFCLat = channelTransFrac*self.routedUSRFC
-            self.routedUSRFC = (self.routedUSRFC +pcr.upstream(self.lddMap,dUSRFCLat)-dUSRFCLat) * self.FCdecay
-            
-            self.routedintLivFC = self.routedintLivFC + (self.intLiv_FCload *(timeSec/ vos.secondsPerDay()))
+            self.routedUSRFC = (self.routedUSRFC +pcr.upstream(self.lddMap,dUSRFCLat)-dUSRFCLat)
             dintLivFCLat = channelTransFrac*self.routedintLivFC
-            self.routedintLivFC = (self.routedintLivFC +pcr.upstream(self.lddMap,dintLivFCLat)-dintLivFCLat) * self.FCdecay
-            
-            self.routedextLivFC = self.routedextLivFC + (self.extLiv_FCload *(timeSec/ vos.secondsPerDay()))
+            self.routedintLivFC = (self.routedintLivFC +pcr.upstream(self.lddMap,dintLivFCLat)-dintLivFCLat)
             dextLivFCLat = channelTransFrac*self.routedextLivFC
-            self.routedextLivFC = (self.routedextLivFC +pcr.upstream(self.lddMap,dextLivFCLat)-dextLivFCLat) * self.FCdecay
+            self.routedextLivFC = (self.routedextLivFC +pcr.upstream(self.lddMap,dextLivFCLat)-dextLivFCLat)
 
     def energyWaterBody(self):
         lakeTransFrac = pcr.max(pcr.min((self.WaterBodies.waterBodyOutflow) / (self.waterBodyStorageTimeBefore), 1.0),0.0)

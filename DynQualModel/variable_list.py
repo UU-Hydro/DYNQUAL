@@ -1190,6 +1190,50 @@ description[pcrglobwb_variable_name]       = None
 comment[pcrglobwb_variable_name]           = 'In-stream organic (BOD) concentration in mg.l'
 latex_symbol[pcrglobwb_variable_name]      = None
 
+# Deoxygenation rate (k1) 
+pcrglobwb_variable_name = 'k1'
+netcdf_short_name[pcrglobwb_variable_name] = 'k1'
+netcdf_unit[pcrglobwb_variable_name]       = '/day'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'deoxygenation_rate'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'k1 in /day'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# BOD concentration
+pcrglobwb_variable_name = 'BOD_concentration'
+netcdf_short_name[pcrglobwb_variable_name] = 'BOD_concentration'
+netcdf_unit[pcrglobwb_variable_name]       = 'mg.l'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'BOD concentration in mg.l'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'BOD in mg.l'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# Saturation oxygen (DOsat) 
+pcrglobwb_variable_name = 'saturation'
+netcdf_short_name[pcrglobwb_variable_name] = 'saturation'
+netcdf_unit[pcrglobwb_variable_name]       = 'mg.l'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'oxygen_saturation'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'DOsat in mg.l'
+latex_symbol[pcrglobwb_variable_name]      = None
+
+# Dissolved oxygen 
+pcrglobwb_variable_name = 'oxygen'
+netcdf_short_name[pcrglobwb_variable_name] = 'oxygen'
+netcdf_unit[pcrglobwb_variable_name]       = 'mg.l'
+netcdf_monthly_total_unit[pcrglobwb_variable_name] = None
+netcdf_yearly_total_unit[pcrglobwb_variable_name]  = None
+netcdf_long_name[pcrglobwb_variable_name]  = 'dissolved_oxygen_concentration'
+description[pcrglobwb_variable_name]       = None
+comment[pcrglobwb_variable_name]           = 'In-stream DO concentration in mg.l'
+latex_symbol[pcrglobwb_variable_name]      = None
+
 # Pathogen pollution (concentration in FC cfu.100ml)
 pcrglobwb_variable_name = 'pathogen'
 netcdf_short_name[pcrglobwb_variable_name] = 'pathogen'
