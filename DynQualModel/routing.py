@@ -1,9 +1,17 @@
-#!/usr/bin/ python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-#PCR-GLOBWB2 and DynQual routing.
-#@authors (PCR-GLOBWB2): Edwin H. Sutanudjaja
-#@authors (DynQual)    : Edward R. Jones, Niko Wanders
+#
+# PCR-GLOBWB2 (PCRaster Global Water Balance) Global Hydrological Model
+#
+# Copyright (C) 2016, Edwin H. Sutanudjaja, Rens van Beek, Niko Wanders, Yoshihide Wada, 
+# Joyce H. C. Bosmans, Niels Drost, Ruud J. van der Ent, Inge E. M. de Graaf, Jannis M. Hoch, 
+# Kor de Jong, Derek Karssenberg, Patricia López López, Stefanie Peßenteiner, Oliver Schmitz, 
+# Menno W. Straatsma, Ekkamol Vannametee, Dominik Wisser, and Marc F. P. Bierkens
+# Faculty of Geosciences, Utrecht University, Utrecht, The Netherlands
+#
+# DynQual (Dynamic Quality) Global Water Quality Model v1.0
+# Edward R. Jones, Michelle T.H. van Vliet, Niko Wanders, Edwin H. Sutanudjaja, Rens van Beek, and Marc F. P. Bierkens
+# Faculty of Geosciences, Utrecht University, Utrecht, The Netherlands
 
 import os
 import types
@@ -2844,116 +2852,117 @@ class Routing(object):
         self.remainingVolumeEW = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * energyTotal), 0.0)
         
     def qualityWaterBody(self):
+        
         lakeTransFrac = pcr.max(pcr.min((self.WaterBodies.waterBodyOutflow) / (self.waterBodyStorageTimeBefore), 1.0),0.0)
         lakeTransFrac = cover(ifthen(self.WaterBodies.waterBodyOut, lakeTransFrac), 0.0)
         
-        #Salinity (amount in water body)
+        #Salinity (amount of TDS in water body)
         wbTDSTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
          pcr.areatotal(pcr.ifthen(self.landmask,self.routedTDS),\
          pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedTDS)
-        self.wbVolumeTDS = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbTDSTotal*lakeTransFrac),wbTDSTotal)
-        self.wbRemainingVolumeTDS = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbTDSTotal), 0.0)
+        self.routedTDS = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbTDSTotal*lakeTransFrac),wbTDSTotal)        
+        self.wbRemainingTDS = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbTDSTotal), 0.0)
         
         if self.loadsPerSector:
             wbDomTDSTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
              pcr.areatotal(pcr.ifthen(self.landmask,self.routedDomTDS),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedDomTDS)
-            self.wbVolumeDomTDS = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbDomTDSTotal*lakeTransFrac),wbDomTDSTotal)
-            self.wbRemainingVolumeDomTDS = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbDomTDSTotal), 0.0)
+            self.routedDomTDS = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbDomTDSTotal*lakeTransFrac),wbDomTDSTotal)
+            self.wbRemainingDomTDS = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbDomTDSTotal), 0.0)
             
             wbManTDSTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
              pcr.areatotal(pcr.ifthen(self.landmask,self.routedManTDS),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedManTDS)
-            self.wbVolumeManTDS = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbManTDSTotal*lakeTransFrac),wbManTDSTotal)
-            self.wbRemainingVolumeManTDS = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbManTDSTotal), 0.0)
+            self.routedManTDS = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbManTDSTotal*lakeTransFrac),wbManTDSTotal)
+            self.wbRemainingManTDS = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbManTDSTotal), 0.0)
             
             wbUSRTDSTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
              pcr.areatotal(pcr.ifthen(self.landmask,self.routedUSRTDS),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedUSRTDS)
-            self.wbVolumeUSRTDS = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbUSRTDSTotal*lakeTransFrac),wbUSRTDSTotal)
-            self.wbRemainingVolumeUSRTDS = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbUSRTDSTotal), 0.0)
+            self.routedUSRTDS = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbUSRTDSTotal*lakeTransFrac),wbUSRTDSTotal)
+            self.wbRemainingUSRTDS = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbUSRTDSTotal), 0.0)
             
             wbIrrTDSTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
              pcr.areatotal(pcr.ifthen(self.landmask,self.routedIrrTDS),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedIrrTDS)
-            self.wbVolumeIrrTDS = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbIrrTDSTotal*lakeTransFrac),wbIrrTDSTotal)
-            self.wbRemainingVolumeIrrTDS = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbIrrTDSTotal), 0.0)
+            self.routedIrrTDS = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbIrrTDSTotal*lakeTransFrac),wbIrrTDSTotal)
+            self.wbRemainingIrrTDS = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbIrrTDSTotal), 0.0)
             
-        #Organic (amount in water body)
+        #Organic (amount of BOD in water body)
         wbBODTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
          pcr.areatotal(pcr.ifthen(self.landmask,self.routedBOD),\
          pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedBOD)
-        self.wbVolumeBOD = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbBODTotal*lakeTransFrac),wbBODTotal)
-        self.wbRemainingVolumeBOD = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbBODTotal), 0.0)
+        self.routedBOD = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbBODTotal*lakeTransFrac),wbBODTotal)
+        self.wbRemainingBOD = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbBODTotal), 0.0)
 
         if self.loadsPerSector: 
             wbDomBODTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
              pcr.areatotal(pcr.ifthen(self.landmask,self.routedDomBOD),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedDomBOD)
-            self.wbVolumeDomBOD = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbDomBODTotal*lakeTransFrac),wbDomBODTotal)
-            self.wbRemainingVolumeDomBOD = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbDomBODTotal), 0.0)
+            self.routedDomBOD = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbDomBODTotal*lakeTransFrac),wbDomBODTotal)
+            self.wbRemainingDomBOD = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbDomBODTotal), 0.0)
             
             wbManBODTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
              pcr.areatotal(pcr.ifthen(self.landmask,self.routedManBOD),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedManBOD)
-            self.wbVolumeManBOD = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbManBODTotal*lakeTransFrac),wbManBODTotal)
-            self.wbRemainingVolumeManBOD = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbManBODTotal), 0.0)
+            self.routedManBOD = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbManBODTotal*lakeTransFrac),wbManBODTotal)
+            self.wbRemainingManBOD = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbManBODTotal), 0.0)
             
             wbUSRBODTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
              pcr.areatotal(pcr.ifthen(self.landmask,self.routedUSRBOD),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedUSRBOD)
-            self.wbVolumeUSRBOD = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbUSRBODTotal*lakeTransFrac),wbUSRBODTotal)
-            self.wbRemainingVolumeUSRBOD = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbUSRBODTotal), 0.0)
+            self.routedUSRBOD = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbUSRBODTotal*lakeTransFrac),wbUSRBODTotal)
+            self.wbRemainingUSRBOD = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbUSRBODTotal), 0.0)
             
             wbintLivBODTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
              pcr.areatotal(pcr.ifthen(self.landmask,self.routedintLivBOD),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedintLivBOD)
-            self.wbVolumeintLivBOD = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbintLivBODTotal*lakeTransFrac),wbintLivBODTotal)
-            self.wbRemainingVolumeintLivBOD = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbintLivBODTotal), 0.0)
+            self.routedintLivBOD = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbintLivBODTotal*lakeTransFrac),wbintLivBODTotal)
+            self.wbRemainingintLivBOD = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbintLivBODTotal), 0.0)
             
             wbextLivBODTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
              pcr.areatotal(pcr.ifthen(self.landmask,self.routedextLivBOD),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedextLivBOD)
-            self.wbVolumeextLivBOD = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbextLivBODTotal*lakeTransFrac),wbextLivBODTotal)
-            self.wbRemainingVolumeextLivBOD = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbextLivBODTotal), 0.0)
+            self.routedextLivBOD = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbextLivBODTotal*lakeTransFrac),wbextLivBODTotal)
+            self.wbRemainingextLivBOD = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbextLivBODTotal), 0.0)
         
-        #Pathogen (amount in water body)
+        #Pathogen (amount of FC in water body)
         wbFCTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
          pcr.areatotal(pcr.ifthen(self.landmask,self.routedFC),\
          pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedFC)
-        self.wbVolumeFC = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbFCTotal*lakeTransFrac),wbFCTotal)
-        self.wbRemainingVolumeFC = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbFCTotal), 0.0)
+        self.routedFC = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbFCTotal*lakeTransFrac),wbFCTotal)
+        self.wbRemainingFC = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbFCTotal), 0.0)
         
         if self.loadsPerSector:
             wbDomFCTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
              pcr.areatotal(pcr.ifthen(self.landmask,self.routedDomFC),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedDomFC)
-            self.wbVolumeDomFC = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbDomFCTotal*lakeTransFrac),wbDomFCTotal)
-            self.wbRemainingVolumeDomFC = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbDomFCTotal), 0.0)
+            self.routedDomFC = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbDomFCTotal*lakeTransFrac),wbDomFCTotal)
+            self.wbRemainingDomFC = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbDomFCTotal), 0.0)
             
             wbManFCTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
              pcr.areatotal(pcr.ifthen(self.landmask,self.routedManFC),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedManFC)
-            self.wbVolumeManFC = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbManFCTotal*lakeTransFrac),wbManFCTotal)
-            self.wbRemainingVolumeManFC = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbManFCTotal), 0.0)
+            self.routedManFC = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbManFCTotal*lakeTransFrac),wbManFCTotal)
+            self.wbRemainingManFC = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbManFCTotal), 0.0)
             
             wbUSRFCTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
              pcr.areatotal(pcr.ifthen(self.landmask,self.routedUSRFC),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedUSRFC)
-            self.wbVolumeUSRFC = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbUSRFCTotal*lakeTransFrac),wbUSRFCTotal)
-            self.wbRemainingVolumeUSRFC = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbUSRFCTotal), 0.0)
+            self.routedUSRFC = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbUSRFCTotal*lakeTransFrac),wbUSRFCTotal)
+            self.wbRemainingUSRFC = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbUSRFCTotal), 0.0)
             
             wbintLivFCTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
              pcr.areatotal(pcr.ifthen(self.landmask,self.routedintLivFC),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedintLivFC)
-            self.wbVolumeintLivFC = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbintLivFCTotal*lakeTransFrac),wbintLivFCTotal)
-            self.wbRemainingVolumeintLivFC = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbintLivFCTotal), 0.0)
+            self.routedintLivFC = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbintLivFCTotal*lakeTransFrac),wbintLivFCTotal)
+            self.wbRemainingintLivFC = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbintLivFCTotal), 0.0)
             
             wbextLivFCTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
              pcr.areatotal(pcr.ifthen(self.landmask,self.routedextLivFC),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedextLivFC)
-            self.wbVolumeextLivFC = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbextLivFCTotal*lakeTransFrac),wbextLivFCTotal)
-            self.wbRemainingVolumeextLivFC = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbextLivFCTotal), 0.0)
+            self.routedextLivFC = cover(ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0., wbextLivFCTotal*lakeTransFrac),wbextLivFCTotal)
+            self.wbRemainingextLivFC = cover(ifthen(self.WaterBodies.waterBodyOut, (1-lakeTransFrac) * wbextLivFCTotal), 0.0)
 
     def energyWaterBodyAverage(self):
         
@@ -2987,128 +2996,111 @@ class Routing(object):
         self.waterTemp= min(pcr.ifthenelse(self.waterTemp < self.iceThresTemp+0.1,self.iceThresTemp+0.1,self.waterTemp), self.maxThresTemp)
 
     def qualityWaterBodyAverage(self):
-        
-        #Salinity (averaged over water body)
+                
+        #Salinity (TDS averaged over water body)
         wbTDSTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-         pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeTDS),\
-         pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedTDS)
-        TDSAverageLakeCell = cover(wbTDSTotal * self.cellArea \
+         pcr.areatotal(pcr.ifthen(self.landmask,self.routedTDS + self.wbRemainingTDS),\
+         pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedTDS)        
+        self.routedTDS = cover(wbTDSTotal * self.cellArea \
           /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbTDSTotal)
-        self.routedTDS = cover(TDSAverageLakeCell, vos.MV)
-        
+                
         if self.loadsPerSector:        
             wbDomTDSTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-             pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeDomTDS),\
+             pcr.areatotal(pcr.ifthen(self.landmask,self.routedDomTDS + self.wbRemainingDomTDS),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedDomTDS)
-            DomTDSAverageLakeCell = cover(wbDomTDSTotal * self.cellArea \
+            self.routedDomTDS = cover(wbDomTDSTotal * self.cellArea \
               /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbDomTDSTotal)
-            self.routedDomTDS = cover(DomTDSAverageLakeCell, vos.MV)
             
             wbManTDSTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-             pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeManTDS),\
+             pcr.areatotal(pcr.ifthen(self.landmask,self.routedManTDS + self.wbRemainingManTDS),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedManTDS)
-            ManTDSAverageLakeCell = cover(wbManTDSTotal * self.cellArea \
+            self.routedManTDS = cover(wbManTDSTotal * self.cellArea \
               /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbManTDSTotal)
-            self.routedManTDS = cover(ManTDSAverageLakeCell, vos.MV)
             
             wbUSRTDSTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-             pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeUSRTDS),\
+             pcr.areatotal(pcr.ifthen(self.landmask,self.routedUSRTDS + self.wbRemainingUSRTDS),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedUSRTDS)
-            USRTDSAverageLakeCell = cover(wbUSRTDSTotal * self.cellArea \
+            self.routedUSRTDS = cover(wbUSRTDSTotal * self.cellArea \
               /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbUSRTDSTotal)
-            self.routedUSRTDS = cover(USRTDSAverageLakeCell, vos.MV)
             
             wbIrrTDSTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-             pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeIrrTDS),\
+             pcr.areatotal(pcr.ifthen(self.landmask,self.routedIrrTDS + self.wbRemainingIrrTDS),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedIrrTDS)
-            IrrTDSAverageLakeCell = cover(wbIrrTDSTotal * self.cellArea \
+            self.routedIrrTDS = cover(wbIrrTDSTotal * self.cellArea \
               /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbIrrTDSTotal)
-            self.routedIrrTDS = cover(IrrTDSAverageLakeCell, vos.MV)
         
-        #Organic (averaged over water body)
+        #Organic (BOD averaged over water body)
         wbBODTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-         pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeBOD),\
+         pcr.areatotal(pcr.ifthen(self.landmask,self.routedBOD + self.wbRemainingBOD),\
          pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedBOD)
-        BODAverageLakeCell = cover(wbBODTotal * self.cellArea \
+        self.routedBOD = cover(wbBODTotal * self.cellArea \
           /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbBODTotal)
-        self.routedBOD = cover(BODAverageLakeCell, vos.MV)
 
         if self.loadsPerSector:        
             wbDomBODTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-             pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeDomBOD),\
+             pcr.areatotal(pcr.ifthen(self.landmask,self.routedDomBOD +self.wbRemainingDomBOD),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedDomBOD)
-            DomBODAverageLakeCell = cover(wbDomBODTotal * self.cellArea \
+            self.routedDomBOD = cover(wbDomBODTotal * self.cellArea \
               /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbDomBODTotal)
-            self.routedDomBOD = cover(DomBODAverageLakeCell, vos.MV)
             
             wbManBODTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-             pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeManBOD),\
+             pcr.areatotal(pcr.ifthen(self.landmask,self.routedManBOD +self.wbRemainingManBOD),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedManBOD)
-            ManBODAverageLakeCell = cover(wbManBODTotal * self.cellArea \
+            self.routedManBOD = cover(wbManBODTotal * self.cellArea \
               /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbManBODTotal)
-            self.routedManBOD = cover(ManBODAverageLakeCell, vos.MV)
             
             wbUSRBODTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-             pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeUSRBOD),\
+             pcr.areatotal(pcr.ifthen(self.landmask,self.routedUSRBOD + self.wbRemainingUSRBOD),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedUSRBOD)
-            USRBODAverageLakeCell = cover(wbUSRBODTotal * self.cellArea \
+            self.routedUSRBOD = cover(wbUSRBODTotal * self.cellArea \
               /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbUSRBODTotal)
-            self.routedUSRBOD = cover(USRBODAverageLakeCell, vos.MV)
             
             wbintLivBODTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-             pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeintLivBOD),\
+             pcr.areatotal(pcr.ifthen(self.landmask,self.routedintLivBOD + self.wbRemainingintLivBOD),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedintLivBOD)
-            intLivBODAverageLakeCell = cover(wbintLivBODTotal * self.cellArea \
+            self.routedintLivBOD = cover(wbintLivBODTotal * self.cellArea \
               /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbintLivBODTotal)
-            self.routedintLivBOD = cover(intLivBODAverageLakeCell, vos.MV)
             
             wbextLivBODTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-             pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeextLivBOD),\
+             pcr.areatotal(pcr.ifthen(self.landmask,self.routedextLivBOD + self.wbRemainingextLivBOD),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedextLivBOD)
-            extLivBODAverageLakeCell = cover(wbextLivBODTotal * self.cellArea \
+            self.routedextLivBOD = cover(wbextLivBODTotal * self.cellArea \
               /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbextLivBODTotal)
-            self.routedextLivBOD = cover(extLivBODAverageLakeCell, vos.MV)
         
-        #Pathogen (averaged over water body)
+        #Pathogen (FC averaged over water body)
         wbFCTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-         pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeFC),\
+         pcr.areatotal(pcr.ifthen(self.landmask,self.routedFC + self.wbRemainingFC),\
          pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedFC)
-        FCAverageLakeCell = cover(wbFCTotal * self.cellArea \
+        self.routedFC = cover(wbFCTotal * self.cellArea \
           /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbFCTotal)
-        self.routedFC = cover(FCAverageLakeCell, vos.MV)
         
         if self.loadsPerSector:        
             wbDomFCTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-             pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeDomFC),\
+             pcr.areatotal(pcr.ifthen(self.landmask,self.routedDomFC + self.wbRemainingDomFC),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedDomFC)
-            DomFCAverageLakeCell = cover(wbDomFCTotal * self.cellArea \
+            self.routedDomFC = cover(wbDomFCTotal * self.cellArea \
               /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbDomFCTotal)
-            self.routedDomFC = cover(DomFCAverageLakeCell, vos.MV)
             
             wbManFCTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-             pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeManFC),\
+             pcr.areatotal(pcr.ifthen(self.landmask,self.routedManFC +self.wbRemainingManFC),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedManFC)
-            ManFCAverageLakeCell = cover(wbManFCTotal * self.cellArea \
+            self.routedManFC = cover(wbManFCTotal * self.cellArea \
               /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbManFCTotal)
-            self.routedManFC = cover(ManFCAverageLakeCell, vos.MV)
             
             wbUSRFCTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-             pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeUSRFC),\
+             pcr.areatotal(pcr.ifthen(self.landmask,self.routedUSRFC +self.wbRemainingUSRFC),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedUSRFC)
-            USRFCAverageLakeCell = cover(wbUSRFCTotal * self.cellArea \
+            self.routedUSRFC = cover(wbUSRFCTotal * self.cellArea \
               /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbUSRFCTotal)
-            self.routedUSRFC = cover(USRFCAverageLakeCell, vos.MV)
             
             wbintLivFCTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-             pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeintLivFC),\
+             pcr.areatotal(pcr.ifthen(self.landmask,self.routedintLivFC +self.wbRemainingintLivFC),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedintLivFC)
-            intLivFCAverageLakeCell = cover(wbintLivFCTotal * self.cellArea \
+            self.routedintLivFC = cover(wbintLivFCTotal * self.cellArea \
               /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbintLivFCTotal)
-            self.routedintLivFC = cover(intLivFCAverageLakeCell, vos.MV)
             
             wbextLivFCTotal = cover(pcr.ifthen(pcr.scalar(self.WaterBodies.waterBodyIds) > 0.,
-             pcr.areatotal(pcr.ifthen(self.landmask,self.wbRemainingVolumeextLivFC),\
+             pcr.areatotal(pcr.ifthen(self.landmask,self.routedextLivFC +self.wbRemainingextLivFC),\
              pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds))), self.routedextLivFC)
-            extLivFCAverageLakeCell = cover(wbextLivFCTotal * self.cellArea \
+            self.routedextLivFC = cover(wbextLivFCTotal * self.cellArea \
               /pcr.areatotal(pcr.cover(self.cellArea, 0.0),pcr.ifthen(self.landmask,self.WaterBodies.waterBodyIds)), wbextLivFCTotal)
-            self.routedextLivFC = cover(extLivFCAverageLakeCell, vos.MV)

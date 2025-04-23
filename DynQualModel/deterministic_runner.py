@@ -9,7 +9,7 @@
 # Menno W. Straatsma, Ekkamol Vannametee, Dominik Wisser, and Marc F. P. Bierkens
 # Faculty of Geosciences, Utrecht University, Utrecht, The Netherlands
 #
-# DynQual (Dynamic Quality) Global Water Quality Model
+# DynQual (Dynamic Quality) Global Water Quality Model v1.0
 # Edward R. Jones, Michelle T.H. van Vliet, Niko Wanders, Edwin H. Sutanudjaja, Rens van Beek, and Marc F. P. Bierkens
 # Faculty of Geosciences, Utrecht University, Utrecht, The Netherlands
 #

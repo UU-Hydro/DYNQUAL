@@ -1,3 +1,18 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# PCR-GLOBWB2 (PCRaster Global Water Balance) Global Hydrological Model
+#
+# Copyright (C) 2016, Edwin H. Sutanudjaja, Rens van Beek, Niko Wanders, Yoshihide Wada, 
+# Joyce H. C. Bosmans, Niels Drost, Ruud J. van der Ent, Inge E. M. de Graaf, Jannis M. Hoch, 
+# Kor de Jong, Derek Karssenberg, Patricia López López, Stefanie Peßenteiner, Oliver Schmitz, 
+# Menno W. Straatsma, Ekkamol Vannametee, Dominik Wisser, and Marc F. P. Bierkens
+# Faculty of Geosciences, Utrecht University, Utrecht, The Netherlands
+#
+# DynQual (Dynamic Quality) Global Water Quality Model v1.0
+# Edward R. Jones, Michelle T.H. van Vliet, Niko Wanders, Edwin H. Sutanudjaja, Rens van Beek, and Marc F. P. Bierkens
+# Faculty of Geosciences, Utrecht University, Utrecht, The Netherlands
+
 '''
 Reporting (writing) of PCR-GLOBWB2 and DynQual output variables to netcdf files. Aggregates totals and averages for various time periods.
 @authors (PCR-GLOBWB2): Edwin H. Sutanudjaja
@@ -64,6 +79,59 @@ class Reporting(object):
                 self.netcdfObj.createNetCDF(self.outNCDir+"/"+ \
                                             str(var)+\
                                             "_dailyTot_output.nc",\
+                                            short_name,unit,long_name)
+
+        # -- weekly average
+        self.outWeekTotNC = ["None"]
+        try:
+            self.outWeekTotNC = configuration.reportingOptions['outWeekTotNC'].split(",")
+        except:
+            pass
+        if self.outWeekTotNC[0] != "None":
+            for var in self.outWeekTotNC:
+
+                # initiating monthlyVarTot (accumulator variable):
+                vars(self)[var+'WeekTot'] = None
+
+                logger.info("Creating the netcdf file for weekly accumulation reporting for variable %s.", str(var))
+
+                short_name = varDicts.netcdf_short_name[var]
+                unit       = varDicts.netcdf_monthly_total_unit[var]      
+                long_name  = varDicts.netcdf_long_name[var]
+                if long_name == None: long_name = short_name  
+
+                # creating netCDF files:
+                self.netcdfObj.createNetCDF(self.outNCDir+"/"+ \
+                                            str(var)+\
+                                            "_weekTot_output.nc",\
+                                            short_name,unit,long_name)
+        
+        self.outWeekAvgNC = ["None"]
+        try:
+            self.outWeekAvgNC = configuration.reportingOptions['outWeekAvgNC'].split(",")
+        except:
+            pass
+        if self.outWeekAvgNC[0] != "None":
+
+            for var in self.outWeekAvgNC:
+
+                # initiating monthlyTotAvg (accumulator variable)
+                vars(self)[var+'WeekTot'] = None
+
+                # initiating monthlyVarAvg:
+                vars(self)[var+'WeekAvg'] = None
+
+                logger.info("Creating the netcdf file for weekly average reporting for variable %s.", str(var))
+
+                short_name = varDicts.netcdf_short_name[var]
+                unit       = varDicts.netcdf_unit[var]      
+                long_name  = varDicts.netcdf_long_name[var]
+                if long_name == None: long_name = short_name  
+
+                # creating netCDF files:
+                self.netcdfObj.createNetCDF(self.outNCDir+"/"+ \
+                                            str(var)+\
+                                            "_weekAvg_output.nc",\
                                             short_name,unit,long_name)
         #
         # - MONTHly output in netCDF files:
@@ -265,6 +333,8 @@ class Reporting(object):
         
         # list of variables that will be reported:
         self.variables_for_report = self.outDailyTotNC +\
+                                    self.outWeekTotNC +\
+                                    self.outWeekAvgNC +\
                                     self.outMonthTotNC +\
                                     self.outMonthAvgNC +\
                                     self.outMonthEndNC +\
@@ -370,8 +440,8 @@ class Reporting(object):
         self.channelStorage = self._model.routing.channelStorage
         
         # channel storage with discharge constraint (for calculating in-stream concentrations)
-        channelStorage_QThres = pcr.cover(0.01) #in m3/s
-        self.channelStorage_Qthres = pcr.ifthenelse(pcr.cover(self.channelStorage,vos.MV) > channelStorage_QThres, self.channelStorage, vos.MV)
+        channelStorage_QThres = pcr.cover(0.1) #in m3/s
+        self.channelStorage_Qthres = pcr.ifthenelse(pcr.cover(self.discharge,vos.MV) > channelStorage_QThres, self.channelStorage, vos.MV)
         
         # water temperature (K)
         self.waterTemp = self._model.routing.waterTemp
@@ -385,7 +455,7 @@ class Reporting(object):
         # Aspects related to salinity pollution
         self.TDSload = self._model.routing.TDSload #in grams
         self.routedTDS = self._model.routing.routedTDS #in grams
-        self.salinity = pcr.ifthenelse(self.channelStorage_Qthres != vos.MV, self._model.routing.routedTDS / self.channelStorage_Qthres, vos.MV) #non-natural salinity in mg/L
+        self.salinity = pcr.ifthenelse(self.channelStorage_Qthres != vos.MV, self._model.routing.routedTDS / self.channelStorage_Qthres, 0.) #non-natural salinity in mg/L
         self.salinity = pcr.ifthenelse(self.salinity != vos.MV, self.salinity + self._model.routing.backgroundSalinity,self._model.routing.backgroundSalinity) # +background salinity  
         
         if self.loadsPerSector == "True":
@@ -403,7 +473,7 @@ class Reporting(object):
         # Aspects related to organic pollution
         self.BODload = self._model.routing.BODload #in grams
         self.routedBOD = self._model.routing.routedBOD #in grams
-        self.organic = pcr.ifthenelse(self.channelStorage_Qthres != vos.MV, self._model.routing.routedBOD / self.channelStorage_Qthres, 0.) #in mg/l
+        self.organic = pcr.ifthenelse(self.channelStorage_Qthres != vos.MV, self._model.routing.routedBOD / self.channelStorage_Qthres, vos.MV) #in mg/l
 
         if self.loadsPerSector == "True":
             #-BOD
@@ -422,7 +492,7 @@ class Reporting(object):
         # Aspects related to pathogen pollution
         self.FCload = self._model.routing.FCload #in million cfu
         self.routedFC = self._model.routing.routedFC #in million cfu
-        self.pathogen = pcr.ifthenelse(self.channelStorage_Qthres != vos.MV, self._model.routing.routedFC * 100 / self.channelStorage_Qthres, 0.) # in cfu/100ml
+        self.pathogen = pcr.ifthenelse(self.channelStorage_Qthres != vos.MV, self._model.routing.routedFC * 100. / self.channelStorage_Qthres, vos.MV) # in cfu/100ml
 
         if self.loadsPerSector  == "True":            
             #-FC
@@ -555,6 +625,63 @@ class Reporting(object):
                   pcr2numpy(self.__getattribute__(var),vos.MV),\
                                             timeStamp)
 
+        # - weekly total
+        if self.outWeekTotNC[0] != "None":
+            for var in self.outWeekTotNC:
+
+                # introduce accumulator at the beginning of simulation or
+                if self._modelTime.timeStepPCR == 1 or self._modelTime.doy == 1:
+                    vars(self)[var+'WeekTot'] = pcr.scalar(0.0)
+
+                # accumulating
+                valid = pcr.ifthen(pcr.defined(vars(self)[var]), vars(self)[var] != vos.MV)
+                vars(self)[var+'WeekTot'] += pcr.ifthenelse(valid, vars(self)[var], pcr.scalar(0.))
+                vars(self)[var+'_ndays_week'] += pcr.ifthenelse(valid, pcr.scalar(1.0), pcr.scalar(0.))
+
+                # calculating total & reporting (53 weeks per year):
+                if self._modelTime.doy % 7 == 0 or self._modelTime.endYear == True: 
+
+                    short_name = varDicts.netcdf_short_name[var]
+                    self.netcdfObj.data2NetCDF(self.outNCDir+"/"+ \
+                                               str(var)+\
+                                               "_weekTot_output.nc",\
+                                               short_name,\
+                      pcr2numpy(self.__getattribute__(var+'WeekTot'),\
+                       vos.MV),timeStamp)
+                    vars(self)[var+'WeekTot'] = pcr.scalar(0.0)
+
+
+        # - weekly average
+        if self.outWeekAvgNC[0] != "None":
+            for var in self.outWeekAvgNC:
+
+                # introduce accumulator at the beginning of simulation or
+                if self._modelTime.timeStepPCR == 1 or self._modelTime.doy == 1:
+                    vars(self)[var+'WeekTot'] = pcr.scalar(0.0)
+                    vars(self)[var+'_ndays_week'] = pcr.scalar(0.0)
+
+                # accumulating
+                valid = pcr.ifthen(pcr.defined(vars(self)[var]), vars(self)[var] != vos.MV)
+                vars(self)[var+'WeekTot'] += pcr.ifthenelse(valid, vars(self)[var], pcr.scalar(0.))
+                vars(self)[var+'_ndays_week'] += pcr.ifthenelse(valid, pcr.scalar(1.0), pcr.scalar(0.))
+
+                # calculating average & reporting (53 weeks per year):
+                if self._modelTime.doy % 7 == 0 or self._modelTime.endYear == True: 
+
+                    vars(self)[var+'WeekAvg'] = pcr.ifthenelse(vars(self)[var+'_ndays_week'] > 0.0,\
+                                                  vars(self)[var+'WeekTot'] / vars(self)[var+'_ndays_week'], pcr.scalar(vos.MV))
+
+                    short_name = varDicts.netcdf_short_name[var]
+                    self.netcdfObj.data2NetCDF(self.outNCDir+"/"+ \
+                                               str(var)+\
+                                               "_weekAvg_output.nc",\
+                                               short_name,\
+                      pcr2numpy(self.__getattribute__(var+'WeekAvg'),\
+                       vos.MV),timeStamp)
+                    
+                    vars(self)[var+'WeekTot'] = pcr.scalar(0.0)
+                    vars(self)[var+'_ndays_week'] = pcr.scalar(0.0)
+
         # writing monthly output to netcdf files
         # - cummulative
         if self.outMonthTotNC[0] != "None":
@@ -562,12 +689,14 @@ class Reporting(object):
 
                 # introduce variables at the beginning of simulation or
                 #     reset variables at the beginning of the month
-                if self._modelTime.timeStepPCR == 1 or \
-                   self._modelTime.day == 1:\
+                if self._modelTime.timeStepPCR == 1 or self._modelTime.day == 1:
                    vars(self)[var+'MonthTot'] = pcr.scalar(0.0)
+                   vars(self)[var+'MonthDayCount'] = pcr.scalar(0.0)
 
                 # accumulating
-                vars(self)[var+'MonthTot'] += vars(self)[var]
+                valid = pcr.ifthen(pcr.defined(vars(self)[var]), vars(self)[var] != vos.MV)
+                vars(self)[var+'MonthTot'] += pcr.ifthenelse(valid, vars(self)[var], pcr.scalar(0.))
+                vars(self)[var+'MonthDayCount'] += pcr.ifthenelse(valid, pcr.scalar(1.0), pcr.scalar(0.))
 
                 # reporting at the end of the month:
                 if self._modelTime.endMonth == True: 
@@ -589,18 +718,20 @@ class Reporting(object):
 
                     # introduce accumulator at the beginning of simulation or
                     #     reset accumulator at the beginning of the month
-                    if self._modelTime.timeStepPCR == 1 or \
-                       self._modelTime.day == 1:\
+                    if self._modelTime.timeStepPCR == 1 or self._modelTime.day == 1:
                        vars(self)[var+'MonthTot'] = pcr.scalar(0.0)
+                       vars(self)[var+'MonthDayCount'] = pcr.scalar(0.0)
 
                     # accumulating
-                    vars(self)[var+'MonthTot'] += vars(self)[var]
+                    valid = pcr.ifthen(pcr.defined(vars(self)[var]), vars(self)[var] != vos.MV)
+                    vars(self)[var+'MonthTot'] += pcr.ifthenelse(valid, vars(self)[var], pcr.scalar(0.))
+                    vars(self)[var+'MonthDayCount'] += pcr.ifthenelse(valid, pcr.scalar(1.0), pcr.scalar(0.))
 
                 # calculating average & reporting at the end of the month:
                 if self._modelTime.endMonth == True:
 
-                    vars(self)[var+'MonthAvg'] = vars(self)[var+'MonthTot']/\
-                                                 self._modelTime.day  ###TODO: FIX HERE : currently the missing values are included in the average.
+                    vars(self)[var+'MonthAvg'] = pcr.ifthenelse(vars(self)[var+'MonthDayCount'] > 0.0,\
+                                                  vars(self)[var+'MonthTot'] / vars(self)[var+'MonthDayCount'], pcr.scalar(vos.MV))
 
                     short_name = varDicts.netcdf_short_name[var]
                     self.netcdfObj.data2NetCDF(self.outNCDir+"/"+ \
@@ -624,19 +755,24 @@ class Reporting(object):
                                                short_name,\
                       pcr2numpy(self.__getattribute__(var),\
                        vos.MV),timeStamp)
-        #
+        
         # - maximum
         if self.outMonthMaxNC[0] != "None":
             for var in self.outMonthMaxNC:
+
                 # introduce variables at the beginning of simulation or
                 #     reset variables at the beginning of the month
                 if self._modelTime.timeStepPCR == 1 or \
-                   self._modelTime.day == 1:\
-                   vars(self)[var+'MonthMax'] = pcr.scalar(0.0)
+                   self._modelTime.day == 1:
+                    vars(self)[var+'MonthMax'] = pcr.scalar(0.)
+
                 # find the maximum
-                vars(self)[var+'MonthMax'] = pcr.max(vars(self)[var], vars(self)[var+'MonthMax'])
+                valid = pcr.ifthen(pcr.defined(vars(self)[var]), vars(self)[var] != vos.MV)
+                vars(self)[var+'MonthMax'] = pcr.ifthenelse(valid,pcr.max(vars(self)[var], vars(self)[var+'MonthMax']),vars(self)[var+'MonthMax'])
+
                 # reporting at the end of the month:
-                if self._modelTime.endMonth == True:
+                if self._modelTime.endMonth == True: 
+
                     short_name = varDicts.netcdf_short_name[var]
                     self.netcdfObj.data2NetCDF(self.outNCDir+"/"+ \
                                             str(var)+\
@@ -652,12 +788,14 @@ class Reporting(object):
 
                 # introduce variables at the beginning of simulation or
                 #     reset variables at the beginning of the year
-                if self._modelTime.timeStepPCR == 1 or \
-                   self._modelTime.doy == 1:\
+                if self._modelTime.timeStepPCR == 1 or self._modelTime.doy == 1:
                    vars(self)[var+'AnnuaTot'] = pcr.scalar(0.0)
+                   vars(self)[var+'AnnualDayCount'] = pcr.scalar(0.0)
 
                 # accumulating
-                vars(self)[var+'AnnuaTot'] += vars(self)[var]
+                valid = pcr.ifthen(pcr.defined(vars(self)[var]), vars(self)[var] != vos.MV)
+                vars(self)[var+'AnnuaTot'] += pcr.ifthenelse(valid, vars(self)[var], pcr.scalar(0.))
+                vars(self)[var+'AnnualDayCount'] += pcr.ifthenelse(valid, pcr.scalar(1.0), pcr.scalar(0.))
 
                 # reporting at the end of the year:
                 if self._modelTime.endYear == True: 
@@ -679,18 +817,20 @@ class Reporting(object):
 
                     # introduce accumulator at the beginning of simulation or
                     #     reset accumulator at the beginning of the year
-                    if self._modelTime.timeStepPCR == 1 or \
-                       self._modelTime.doy == 1:\
+                    if self._modelTime.timeStepPCR == 1 or self._modelTime.doy == 1:
                        vars(self)[var+'AnnuaTot'] = pcr.scalar(0.0)
+                       vars(self)[var+'AnnualDayCount'] = pcr.scalar(0.0)
 
                     # accumulating
-                    vars(self)[var+'AnnuaTot'] += vars(self)[var]
+                    valid = pcr.ifthen(pcr.defined(vars(self)[var]), vars(self)[var] != vos.MV)
+                    vars(self)[var+'AnnuaTot'] += pcr.ifthenelse(valid, vars(self)[var], pcr.scalar(0.))
+                    vars(self)[var+'AnnualDayCount'] += pcr.ifthenelse(valid, pcr.scalar(1.0), pcr.scalar(0.))
 
                 # calculating average & reporting at the end of the year:
                 if self._modelTime.endYear == True:
 
-                    vars(self)[var+'AnnuaAvg'] = vars(self)[var+'AnnuaTot']/\
-                                                 self._modelTime.doy  ###TODO: FIX HERE : currently the missing values are included in the average.
+                    vars(self)[var+'AnnuaAvg'] = pcr.ifthenelse(vars(self)[var+'AnnualDayCount'] > 0.0,\
+                                                  vars(self)[var+'AnnuaTot'] / vars(self)[var+'AnnualDayCount'], pcr.scalar(vos.MV))
 
                     short_name = varDicts.netcdf_short_name[var]
                     self.netcdfObj.data2NetCDF(self.outNCDir+"/"+ \
@@ -715,15 +855,20 @@ class Reporting(object):
         # - maximum
         if self.outAnnuaMaxNC[0] != "None":
             for var in self.outAnnuaMaxNC:
+
                 # introduce variables at the beginning of simulation or
                 #     reset variables at the beginning of the year
                 if self._modelTime.timeStepPCR == 1 or \
-                   self._modelTime.doy == 1:\
-                   vars(self)[var+'AnnuaMax'] = pcr.scalar(0.0)
+                   self._modelTime.doy == 1:
+                    vars(self)[var+'AnnuaMax'] = pcr.scalar(0.)
+
                 # find the maximum
-                vars(self)[var+'AnnuaMax'] = pcr.max(vars(self)[var], vars(self)[var+'AnnuaMax'])
+                valid = pcr.ifthen(pcr.defined(vars(self)[var]), vars(self)[var] != vos.MV)
+                vars(self)[var+'AnnuaMax'] = pcr.ifthenelse(valid,pcr.max(vars(self)[var], vars(self)[var+'AnnuaMax']),vars(self)[var+'AnnuaMax'])
+
                 # reporting at the end of the year:
-                if self._modelTime.endYear == True:
+                if self._modelTime.endYear == True: 
+
                     short_name = varDicts.netcdf_short_name[var]
                     self.netcdfObj.data2NetCDF(self.outNCDir+"/"+ \
                                             str(var)+\
