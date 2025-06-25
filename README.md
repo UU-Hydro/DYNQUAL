@@ -1,4 +1,7 @@
-# DynQual
+# New github link for developments after v1.0
+For more recent versions and developments of DYNQUAL, please go to https://github.com/SustainableWaterSystems/DYNQUAL
+
+# DynQual v1.0
 
 The dynamical surface water quality model (DynQual) is a large scale water quality model for simulating daily water temperature (Tw), total dissolved solids (TDS), biological oxygen demand (BOD) and fecal coliform (FC) at 5 arc-minute spatial resolution with a daily timestep. 
 
